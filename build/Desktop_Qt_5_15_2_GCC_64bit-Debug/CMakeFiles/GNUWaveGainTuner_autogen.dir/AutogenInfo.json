@@ -36,6 +36,8 @@
 		"/home/labuser/Qt/5.15.2/gcc_64/lib/cmake/Qt5Core/Qt5CoreConfigExtrasMkspecDir.cmake",
 		"/home/labuser/Qt/5.15.2/gcc_64/lib/cmake/Qt5Core/Qt5CoreMacros.cmake",
 		"/home/labuser/Qt/Tools/CMake/share/cmake-3.29/Modules/CMakeParseArguments.cmake",
+		"/home/labuser/Qt/5.15.2/gcc_64/lib/cmake/Qt5SerialPort/Qt5SerialPortConfigVersion.cmake",
+		"/home/labuser/Qt/5.15.2/gcc_64/lib/cmake/Qt5SerialPort/Qt5SerialPortConfig.cmake",
 		"/home/labuser/Qt/Tools/CMake/share/cmake-3.29/Modules/GNUInstallDirs.cmake"
 	],
 	"CMAKE_SOURCE_DIR" : "/home/labuser/Dev/GNUWaveGainTuner",

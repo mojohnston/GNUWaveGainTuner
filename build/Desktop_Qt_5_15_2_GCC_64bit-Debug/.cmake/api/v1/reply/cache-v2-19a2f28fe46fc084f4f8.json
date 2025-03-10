@@ -1430,6 +1430,18 @@
 			"value" : "/home/labuser/Qt/5.15.2/gcc_64/lib/cmake/Qt5Core"
 		},
 		{
+			"name" : "Qt5SerialPort_DIR",
+			"properties" : 
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "The directory containing a CMake configuration file for Qt5SerialPort."
+				}
+			],
+			"type" : "PATH",
+			"value" : "/home/labuser/Qt/5.15.2/gcc_64/lib/cmake/Qt5SerialPort"
+		},
+		{
 			"name" : "Qt5_DIR",
 			"properties" : 
 			[
