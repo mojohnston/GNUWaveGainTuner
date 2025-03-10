@@ -53,9 +53,9 @@
 			null
 		],
 		[
-			"/home/labuser/Dev/GNUWaveGainTuner/inieditor.h",
+			"/home/labuser/Dev/GNUWaveGainTuner/pythoneditor.h",
 			"MU",
-			"EWIEGA46WW/moc_inieditor.cpp",
+			"EWIEGA46WW/moc_pythoneditor.cpp",
 			null
 		],
 		[
@@ -120,8 +120,8 @@
 	"SOURCES" : 
 	[
 		[ "/home/labuser/Dev/GNUWaveGainTuner/amplifierserial.cpp", "MU", null ],
-		[ "/home/labuser/Dev/GNUWaveGainTuner/inieditor.cpp", "MU", null ],
 		[ "/home/labuser/Dev/GNUWaveGainTuner/main.cpp", "MU", null ],
+		[ "/home/labuser/Dev/GNUWaveGainTuner/pythoneditor.cpp", "MU", null ],
 		[ "/home/labuser/Dev/GNUWaveGainTuner/pythonrunner.cpp", "MU", null ],
 		[ "/home/labuser/Dev/GNUWaveGainTuner/waveformtuner.cpp", "MU", null ]
 	],

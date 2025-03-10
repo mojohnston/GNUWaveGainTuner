@@ -137,6 +137,14 @@
 			"path" : "/home/labuser/Qt/Tools/CMake/share/cmake-3.29/Modules/CMakeParseArguments.cmake"
 		},
 		{
+			"isExternal" : true,
+			"path" : "/home/labuser/Qt/5.15.2/gcc_64/lib/cmake/Qt5SerialPort/Qt5SerialPortConfigVersion.cmake"
+		},
+		{
+			"isExternal" : true,
+			"path" : "/home/labuser/Qt/5.15.2/gcc_64/lib/cmake/Qt5SerialPort/Qt5SerialPortConfig.cmake"
+		},
+		{
 			"isCMake" : true,
 			"isExternal" : true,
 			"path" : "/home/labuser/Qt/Tools/CMake/share/cmake-3.29/Modules/GNUInstallDirs.cmake"
