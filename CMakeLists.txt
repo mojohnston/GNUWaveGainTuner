@@ -14,6 +14,10 @@ find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core)
 
 add_executable(GNUWaveGainTuner
   main.cpp
+  inieditor.h inieditor.cpp
+  pythonrunner.h pythonrunner.cpp
+  amplifierserial.h amplifierserial.cpp
+  waveformtuner.h waveformtuner.cpp
 )
 target_link_libraries(GNUWaveGainTuner Qt${QT_VERSION_MAJOR}::Core)
 
