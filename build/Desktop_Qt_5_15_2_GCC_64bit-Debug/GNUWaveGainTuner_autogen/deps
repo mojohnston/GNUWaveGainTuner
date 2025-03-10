@@ -6,9 +6,9 @@ GNUWaveGainTuner_autogen/timestamp: \
 	/home/labuser/Dev/GNUWaveGainTuner/build/Desktop_Qt_5_15_2_GCC_64bit-Debug/CMakeFiles/3.29.3/CMakeCXXCompiler.cmake \
 	/home/labuser/Dev/GNUWaveGainTuner/build/Desktop_Qt_5_15_2_GCC_64bit-Debug/CMakeFiles/3.29.3/CMakeSystem.cmake \
 	/home/labuser/Dev/GNUWaveGainTuner/build/Desktop_Qt_5_15_2_GCC_64bit-Debug/GNUWaveGainTuner_autogen/moc_predefs.h \
-	/home/labuser/Dev/GNUWaveGainTuner/inieditor.cpp \
-	/home/labuser/Dev/GNUWaveGainTuner/inieditor.h \
 	/home/labuser/Dev/GNUWaveGainTuner/main.cpp \
+	/home/labuser/Dev/GNUWaveGainTuner/pythoneditor.cpp \
+	/home/labuser/Dev/GNUWaveGainTuner/pythoneditor.h \
 	/home/labuser/Dev/GNUWaveGainTuner/pythonrunner.cpp \
 	/home/labuser/Dev/GNUWaveGainTuner/pythonrunner.h \
 	/home/labuser/Dev/GNUWaveGainTuner/waveformtuner.cpp \
