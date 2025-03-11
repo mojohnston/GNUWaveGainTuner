@@ -10,3 +10,14 @@
 63	636	1741631500746428663	CMakeFiles/GNUWaveGainTuner.dir/main.cpp.o	610c78454e7e2dec
 1	63	1741631500744428663	/home/labuser/Dev/GNUWaveGainTuner/build/Desktop_Qt_5_15_2_GCC_64bit-Debug/GNUWaveGainTuner_autogen/timestamp	a7d3107d02905365
 64	540	1741631500746428663	CMakeFiles/GNUWaveGainTuner.dir/inieditor.cpp.o	e60eba3e12d2a36f
+0	60	1741656570946466971	GNUWaveGainTuner_autogen/timestamp	a7d3107d02905365
+0	60	1741656570946466971	GNUWaveGainTuner_autogen/mocs_compilation.cpp	a7d3107d02905365
+0	60	1741656570946466971	/home/labuser/Dev/GNUWaveGainTuner/build/Desktop_Qt_5_15_2_GCC_64bit-Debug/GNUWaveGainTuner_autogen/timestamp	a7d3107d02905365
+0	60	1741656570946466971	/home/labuser/Dev/GNUWaveGainTuner/build/Desktop_Qt_5_15_2_GCC_64bit-Debug/GNUWaveGainTuner_autogen/mocs_compilation.cpp	a7d3107d02905365
+61	609	1741656570949466971	CMakeFiles/GNUWaveGainTuner.dir/pythoneditor.cpp.o	b2195a783dd42fa
+61	619	1741656570949466971	CMakeFiles/GNUWaveGainTuner.dir/waveformtuner.cpp.o	94c7638b92c2b73a
+61	638	1741656570949466971	CMakeFiles/GNUWaveGainTuner.dir/main.cpp.o	610c78454e7e2dec
+61	647	1741656570949466971	CMakeFiles/GNUWaveGainTuner.dir/amplifierserial.cpp.o	d7b0099fc4e3b313
+60	668	1741656570948466971	CMakeFiles/GNUWaveGainTuner.dir/GNUWaveGainTuner_autogen/mocs_compilation.cpp.o	77e9e4db8bc2388e
+61	784	1741656570949466971	CMakeFiles/GNUWaveGainTuner.dir/pythonrunner.cpp.o	d582293275564ea
+784	863	1741656571672466980	GNUWaveGainTuner	5388393f7c6fc837

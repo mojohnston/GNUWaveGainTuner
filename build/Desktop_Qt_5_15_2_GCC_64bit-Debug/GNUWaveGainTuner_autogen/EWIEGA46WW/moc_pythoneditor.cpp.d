@@ -1,9 +1,6 @@
-/home/labuser/Dev/GNUWaveGainTuner/build/Desktop_Qt_5_15_2_GCC_64bit-Debug/GNUWaveGainTuner_autogen/EWIEGA46WW/moc_pythonrunner.cpp: /home/labuser/Dev/GNUWaveGainTuner/pythonrunner.h \
+/home/labuser/Dev/GNUWaveGainTuner/build/Desktop_Qt_5_15_2_GCC_64bit-Debug/GNUWaveGainTuner_autogen/EWIEGA46WW/moc_pythoneditor.cpp: /home/labuser/Dev/GNUWaveGainTuner/pythoneditor.h \
   /home/labuser/Dev/GNUWaveGainTuner/build/Desktop_Qt_5_15_2_GCC_64bit-Debug/GNUWaveGainTuner_autogen/moc_predefs.h \
-  /home/labuser/Qt/5.15.2/gcc_64/include/QtCore/QElapsedTimer \
-  /home/labuser/Qt/5.15.2/gcc_64/include/QtCore/QList \
   /home/labuser/Qt/5.15.2/gcc_64/include/QtCore/QObject \
-  /home/labuser/Qt/5.15.2/gcc_64/include/QtCore/QProcess \
   /home/labuser/Qt/5.15.2/gcc_64/include/QtCore/qalgorithms.h \
   /home/labuser/Qt/5.15.2/gcc_64/include/QtCore/qarraydata.h \
   /home/labuser/Qt/5.15.2/gcc_64/include/QtCore/qatomic.h \
@@ -16,14 +13,11 @@
   /home/labuser/Qt/5.15.2/gcc_64/include/QtCore/qconfig.h \
   /home/labuser/Qt/5.15.2/gcc_64/include/QtCore/qcontainerfwd.h \
   /home/labuser/Qt/5.15.2/gcc_64/include/QtCore/qcontainertools_impl.h \
-  /home/labuser/Qt/5.15.2/gcc_64/include/QtCore/qelapsedtimer.h \
   /home/labuser/Qt/5.15.2/gcc_64/include/QtCore/qflags.h \
   /home/labuser/Qt/5.15.2/gcc_64/include/QtCore/qgenericatomic.h \
   /home/labuser/Qt/5.15.2/gcc_64/include/QtCore/qglobal.h \
   /home/labuser/Qt/5.15.2/gcc_64/include/QtCore/qglobalstatic.h \
-  /home/labuser/Qt/5.15.2/gcc_64/include/QtCore/qhash.h \
   /home/labuser/Qt/5.15.2/gcc_64/include/QtCore/qhashfunctions.h \
-  /home/labuser/Qt/5.15.2/gcc_64/include/QtCore/qiodevice.h \
   /home/labuser/Qt/5.15.2/gcc_64/include/QtCore/qiterator.h \
   /home/labuser/Qt/5.15.2/gcc_64/include/QtCore/qlist.h \
   /home/labuser/Qt/5.15.2/gcc_64/include/QtCore/qlogging.h \
@@ -35,12 +29,10 @@
   /home/labuser/Qt/5.15.2/gcc_64/include/QtCore/qobjectdefs.h \
   /home/labuser/Qt/5.15.2/gcc_64/include/QtCore/qobjectdefs_impl.h \
   /home/labuser/Qt/5.15.2/gcc_64/include/QtCore/qpair.h \
-  /home/labuser/Qt/5.15.2/gcc_64/include/QtCore/qprocess.h \
   /home/labuser/Qt/5.15.2/gcc_64/include/QtCore/qprocessordetection.h \
   /home/labuser/Qt/5.15.2/gcc_64/include/QtCore/qrefcount.h \
   /home/labuser/Qt/5.15.2/gcc_64/include/QtCore/qregexp.h \
   /home/labuser/Qt/5.15.2/gcc_64/include/QtCore/qscopedpointer.h \
-  /home/labuser/Qt/5.15.2/gcc_64/include/QtCore/qshareddata.h \
   /home/labuser/Qt/5.15.2/gcc_64/include/QtCore/qstring.h \
   /home/labuser/Qt/5.15.2/gcc_64/include/QtCore/qstringalgorithms.h \
   /home/labuser/Qt/5.15.2/gcc_64/include/QtCore/qstringlist.h \
