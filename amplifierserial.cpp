@@ -21,7 +21,7 @@ AmplifierSerial::~AmplifierSerial()
 
 void AmplifierSerial::searchAndConnect()
 {
-    // List of candidate device names for amp connections. Need to check systems' udev rules
+    // List of candidate device names for amp connections (as defined by udev rules).
     QStringList candidateDevices = {
         "/dev/ttyS_AMP",
         "/dev/ttyS_AMP1",
@@ -34,7 +34,7 @@ void AmplifierSerial::searchAndConnect()
         "/dev/ttyUSB_AMPL1L2"
     };
 
-    // First, clear any existing connections.
+    // Clear any existing connections.
     for (QSerialPort *port : qAsConst(m_ports)) {
         if (port->isOpen())
             port->close();
@@ -49,9 +49,8 @@ void AmplifierSerial::searchAndConnect()
         if (candidateDevices.contains(sysLoc)) {
             qDebug() << "Found amp device:" << sysLoc;
             QSerialPort *port = new QSerialPort(info, this);
-            port->setObjectName(sysLoc); // Save system location as object's name.
+            port->setObjectName(sysLoc); // Save system location for later
 
-            // Set standard parameters for the amp.
             port->setBaudRate(QSerialPort::Baud9600);
             port->setDataBits(QSerialPort::Data8);
             port->setParity(QSerialPort::NoParity);
@@ -59,25 +58,13 @@ void AmplifierSerial::searchAndConnect()
             port->setFlowControl(QSerialPort::NoFlowControl);
             if (port->open(QIODevice::ReadWrite)) {
                 qDebug() << "Connected to amp:" << sysLoc;
-                // Connect the readyRead signal to our slot.
+                // Connect readyRead
                 connect(port, &QSerialPort::readyRead, this, &AmplifierSerial::handleReadyRead);
                 m_ports.insert(sysLoc, port);
             } else {
                 qWarning() << "Failed to open amp:" << sysLoc << ":" << port->errorString();
                 delete port;
             }
-        }
-    }
-}
-
-void AmplifierSerial::checkStatus()
-{
-    // Send "STATUS" to each amp.
-    for (auto it = m_ports.begin(); it != m_ports.end(); ++it) {
-        QSerialPort *port = it.value();
-        if (port->isOpen()) {
-            port->write("STATUS\n");
-            qDebug() << "Sent STATUS command to" << it.key();
         }
     }
 }
@@ -99,19 +86,80 @@ void AmplifierSerial::sendCommand(const QString &command, const QString &device)
     }
 }
 
-void AmplifierSerial::sendStop(const QString &device)
+// Amplifier Commands
+
+void AmplifierSerial::getMode(const QString &device)
 {
-    sendCommand("STOP", device);
+    sendCommand("MODE?", device);
 }
 
-void AmplifierSerial::sendALC(const QString &device)
+void AmplifierSerial::setMode(const QString &mode, const QString &device)
 {
-    sendCommand("ALC", device);
+    // mode should be "ALC" or "VVA"
+    sendCommand("MODE " + mode, device);
 }
 
-void AmplifierSerial::sendGAIN(const QString &device)
+void AmplifierSerial::setStandby(const QString &device)
 {
-    sendCommand("GAIN", device);
+    sendCommand("STANDBY", device);
+}
+
+void AmplifierSerial::setOnline(const QString &device)
+{
+    sendCommand("ONLINE", device);
+}
+
+void AmplifierSerial::getFwdPwr(const QString &device)
+{
+    sendCommand("FWD_PWR?", device);
+}
+
+void AmplifierSerial::getRevPwr(const QString &device)
+{
+    sendCommand("REV_PWR?", device);
+}
+
+void AmplifierSerial::getAlcLvl(const QString &device)
+{
+    sendCommand("ALC_LEVEL?", device);
+}
+
+void AmplifierSerial::setAlcLvl(double level, const QString &device)
+{
+    // Format level as a floating point number (one decimal).
+    QString command = QString("ALC_LEVEL %1").arg(level, 0, 'f', 1);
+    sendCommand(command, device);
+}
+
+void AmplifierSerial::getGainLvl(const QString &device)
+{
+    sendCommand("VVA_LEVEL?", device);
+}
+
+void AmplifierSerial::setGainLvl(double level, const QString &device)
+{
+    QString command = QString("VVA_LEVEL %1").arg(level, 0, 'f', 1);
+    sendCommand(command, device);
+}
+
+void AmplifierSerial::sendAckFaults(const QString &device)
+{
+    sendCommand("ACK_FAULTS", device);
+}
+
+void AmplifierSerial::getFaults(const QString &device)
+{
+    sendCommand("FAULTS?", device);
+}
+
+void AmplifierSerial::getSerialId(const QString &device)
+{
+    sendCommand("SERIAL?", device);
+}
+
+void AmplifierSerial::getModelId(const QString &device)
+{
+    sendCommand("MODEL?", device);
 }
 
 void AmplifierSerial::handleReadyRead()
@@ -121,7 +169,7 @@ void AmplifierSerial::handleReadyRead()
     if (!port)
         return;
 
-    QString device = port->objectName();  // Use the object's name that we set earlier.
+    QString device = port->objectName();  // Retrieve the stored system location.
     QByteArray data = port->readAll();
     QString output = QString::fromUtf8(data);
     qDebug() << "Received from" << device << ":" << output;

@@ -17,16 +17,24 @@ public:
     // Searches available serial ports for amp devices and connects to them.
     void searchAndConnect();
 
-    // Sends "STATUS" command to all connected amps.
-    void checkStatus();
-
     // Sends a command (with a newline) to the amp specified by device name.
     void sendCommand(const QString &command, const QString &device);
 
-    // Convenience functions for specific commands.
-    void sendStop(const QString &device);
-    void sendALC(const QString &device);
-    void sendGAIN(const QString &device);
+    // Convenience functions for amplifier commands:
+    void getMode(const QString &device);
+    void setMode(const QString &mode, const QString &device); // mode should be "ALC" or "VVA"
+    void setStandby(const QString &device);
+    void setOnline(const QString &device);
+    void getFwdPwr(const QString &device);
+    void getRevPwr(const QString &device);
+    void getAlcLvl(const QString &device);
+    void setAlcLvl(double level, const QString &device);
+    void getGainLvl(const QString &device);
+    void setGainLvl(double level, const QString &device);
+    void sendAckFaults(const QString &device);
+    void getFaults(const QString &device);
+    void getSerialId(const QString &device);
+    void getModelId(const QString &device);
 
 signals:
     // Emitted when an amp outputs data.

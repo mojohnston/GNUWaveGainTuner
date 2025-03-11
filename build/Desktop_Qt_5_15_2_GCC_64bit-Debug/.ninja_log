@@ -31,3 +31,10 @@
 1	7	1741652926435422482	/home/labuser/Dev/GNUWaveGainTuner/build/Desktop_Qt_5_15_2_GCC_64bit-Debug/GNUWaveGainTuner_autogen/mocs_compilation.cpp	a7d3107d02905365
 7	614	1741652926441422482	CMakeFiles/GNUWaveGainTuner.dir/amplifierserial.cpp.o	dcb21c906fee319b
 614	690	1741652927048422490	GNUWaveGainTuner	ae6bd1f46a5ffb92
+1	60	1741654929237446931	GNUWaveGainTuner_autogen/timestamp	a7d3107d02905365
+1	60	1741654929237446931	GNUWaveGainTuner_autogen/mocs_compilation.cpp	a7d3107d02905365
+1	60	1741654929237446931	/home/labuser/Dev/GNUWaveGainTuner/build/Desktop_Qt_5_15_2_GCC_64bit-Debug/GNUWaveGainTuner_autogen/timestamp	a7d3107d02905365
+1	60	1741654929237446931	/home/labuser/Dev/GNUWaveGainTuner/build/Desktop_Qt_5_15_2_GCC_64bit-Debug/GNUWaveGainTuner_autogen/mocs_compilation.cpp	a7d3107d02905365
+60	554	1741654929239446931	CMakeFiles/GNUWaveGainTuner.dir/GNUWaveGainTuner_autogen/mocs_compilation.cpp.o	285dfe5b808f119a
+60	696	1741654929239446931	CMakeFiles/GNUWaveGainTuner.dir/amplifierserial.cpp.o	dcb21c906fee319b
+696	772	1741654929875446938	GNUWaveGainTuner	ae6bd1f46a5ffb92
