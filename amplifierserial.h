@@ -14,7 +14,7 @@ public:
     explicit AmplifierSerial(QObject *parent = nullptr);
     ~AmplifierSerial();
 
-    // Searches available serial ports for amp devices and connects to them.
+    // Searches available serial ports for amp devices (whose system location contains "amp", case-insensitive) and connects to them.
     void searchAndConnect();
 
     // Sends a command (with a newline) to the amp specified by device name.
@@ -35,6 +35,9 @@ public:
     void getFaults(const QString &device);
     void getSerialId(const QString &device);
     void getModelId(const QString &device);
+
+    // Public accessor to retrieve the list of connected amplifier device names.
+    QStringList connectedDevices() const;
 
 signals:
     // Emitted when an amp outputs data.

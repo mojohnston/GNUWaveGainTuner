@@ -1,7 +1,9 @@
 #include "amplifierserial.h"
 #include <QSerialPort>
 #include <QSerialPortInfo>
+#include <QRegularExpression>
 #include <QDebug>
+#include <QDir>
 
 AmplifierSerial::AmplifierSerial(QObject *parent)
     : QObject(parent)
@@ -21,18 +23,9 @@ AmplifierSerial::~AmplifierSerial()
 
 void AmplifierSerial::searchAndConnect()
 {
-    // List of candidate device names for amp connections (as defined by udev rules).
-    QStringList candidateDevices = {
-        "/dev/ttyS_AMP",
-        "/dev/ttyS_AMP1",
-        "/dev/ttyS_AMP2",
-        "/dev/ttyUSB_AMP",
-        "/dev/ttyUSB_AMP1",
-        "/dev/ttyUSB_AMP2",
-        "/dev/ttyUSB_AMPL1",
-        "/dev/ttyUSB_AMPL2",
-        "/dev/ttyUSB_AMPL1L2"
-    };
+    // Instead of a fixed candidate list, we use a regex that matches any device name
+    // that contains "amp" (case-insensitive). This should cover "/dev/ttyUSB_AMPL1", etc.
+    static const QRegularExpression ampRegex("(?i).*amp.*");
 
     // Clear any existing connections.
     for (QSerialPort *port : qAsConst(m_ports)) {
@@ -46,11 +39,13 @@ void AmplifierSerial::searchAndConnect()
     const auto availablePorts = QSerialPortInfo::availablePorts();
     for (const QSerialPortInfo &info : availablePorts) {
         QString sysLoc = info.systemLocation();
-        if (candidateDevices.contains(sysLoc)) {
+        QRegularExpressionMatch match = ampRegex.match(sysLoc);
+        if (match.hasMatch()) {
             qDebug() << "Found amp device:" << sysLoc;
             QSerialPort *port = new QSerialPort(info, this);
-            port->setObjectName(sysLoc); // Save system location for later
+            port->setObjectName(sysLoc); // Save system location for later use.
 
+            // Set standard parameters for the amp.
             port->setBaudRate(QSerialPort::Baud9600);
             port->setDataBits(QSerialPort::Data8);
             port->setParity(QSerialPort::NoParity);
@@ -58,9 +53,12 @@ void AmplifierSerial::searchAndConnect()
             port->setFlowControl(QSerialPort::NoFlowControl);
             if (port->open(QIODevice::ReadWrite)) {
                 qDebug() << "Connected to amp:" << sysLoc;
-                // Connect readyRead
+                // Connect readyRead signal to our slot.
                 connect(port, &QSerialPort::readyRead, this, &AmplifierSerial::handleReadyRead);
                 m_ports.insert(sysLoc, port);
+                // If you only want to connect to at most two amplifiers, uncomment the next two lines:
+                // if (m_ports.size() >= 2)
+                //     break;
             } else {
                 qWarning() << "Failed to open amp:" << sysLoc << ":" << port->errorString();
                 delete port;
@@ -180,4 +178,9 @@ void AmplifierSerial::handleReadyRead()
 
     // Always emit the output signal.
     emit ampOutput(device, output);
+}
+
+QStringList AmplifierSerial::connectedDevices() const
+{
+    return m_ports.keys();
 }
