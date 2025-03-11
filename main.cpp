@@ -1,52 +1,77 @@
 #include <QCoreApplication>
 #include <QTextStream>
-#include "pythoneditor.h"
+#include "waveformtuner.h"
 
 int main(int argc, char *argv[])
 {
     QCoreApplication app(argc, argv);
-
     QTextStream cin(stdin);
     QTextStream cout(stdout);
 
-    // Prompt for file path.
-    cout << "Enter the full path to the Python file you wish to edit: " << Qt::flush;
-    QString filePath = cin.readLine().trimmed();
-    if (filePath.isEmpty()) {
-        cout << "Filename cannot be empty. Exiting." << "\n";
+    // Prompt for waveform file location.
+    cout << "Enter the waveform file location to be tuned (e.g. /home/labuser/signals-mamba/L1_BBN20M.py): " << Qt::flush;
+    QString waveformFile = cin.readLine().trimmed();
+    if (waveformFile.isEmpty()) {
+        cout << "Waveform file cannot be empty. Exiting." << "\n";
         return -1;
     }
 
-    // Prompt for channel.
-    cout << "Enter the channel to edit (L1 or L2): " << Qt::flush;
-    QString channelInput = cin.readLine().trimmed();
-    int channel = -1;
-    if (channelInput.compare("L1", Qt::CaseInsensitive) == 0)
-        channel = 0;
-    else if (channelInput.compare("L2", Qt::CaseInsensitive) == 0)
-        channel = 1;
-    else {
-        cout << "Invalid channel input. Exiting." << "\n";
+    // Prompt for amplifier model.
+    cout << "Are you tuning for an x300 or N321? " << Qt::flush;
+    QString ampModel = cin.readLine().trimmed();
+    if (ampModel.compare("x300", Qt::CaseInsensitive) != 0 &&
+        ampModel.compare("N321", Qt::CaseInsensitive) != 0)
+    {
+        cout << "Invalid amplifier model. Exiting." << "\n";
         return -1;
     }
 
-    // Prompt for gain value.
-    cout << "Enter the gain value (integer between -10 and 60): " << Qt::flush;
-    QString gainInput = cin.readLine().trimmed();
+    // Prompt for minimum power.
+    cout << "Enter the minimum power: " << Qt::flush;
+    QString minPowerStr = cin.readLine().trimmed();
     bool ok = false;
-    int gainValue = gainInput.toInt(&ok);
-    if ((!ok) || (gainValue < -10) || (gainValue > 60)) {
-        cout << "Invalid gain value. Exiting." << "\n";
+    int minPower = minPowerStr.toInt(&ok);
+    if (!ok) {
+        cout << "Invalid minimum power. Exiting." << "\n";
         return -1;
     }
 
-    // Call the editGainValue function.
-    PythonEditor editor;
-    if (editor.editGainValue(filePath, gainValue, channel)) {
-        cout << "Successfully updated gain value in file: " << filePath << "\n";
-    } else {
-        cout << "Failed to update gain value in file: " << filePath << "\n";
+    // Prompt for maximum power.
+    cout << "Enter the maximum power: " << Qt::flush;
+    QString maxPowerStr = cin.readLine().trimmed();
+    int maxPower = maxPowerStr.toInt(&ok);
+    if (!ok) {
+        cout << "Invalid maximum power. Exiting." << "\n";
+        return -1;
     }
 
-    return 0;
+    // Prompt for which is critical.
+    cout << "Which is critical - HIGH or LOW? " << Qt::flush;
+    QString critical = cin.readLine().trimmed();
+    if (critical.compare("HIGH", Qt::CaseInsensitive) != 0 &&
+        critical.compare("LOW", Qt::CaseInsensitive) != 0)
+    {
+        cout << "Invalid critical value. Exiting." << "\n";
+        return -1;
+    }
+
+    // Create the waveform tuner object.
+    WaveformTuner tuner;
+
+    // Connect tuning finished signal.
+    QObject::connect(&tuner, &WaveformTuner::tuningFinished, &tuner, [&](){
+        cout << "Tuning complete!!!" << "\n";
+        app.quit();
+    });
+
+    // Connect tuning failed signal.
+    QObject::connect(&tuner, &WaveformTuner::tuningFailed, &tuner, [&](const QString &reason){
+        cout << "Tuning failed: " << reason << "\n";
+        app.quit();
+    });
+
+    // Start tuning with the user-provided parameters.
+    tuner.startTuning(waveformFile, ampModel, minPower, maxPower, critical);
+
+    return app.exec();
 }
