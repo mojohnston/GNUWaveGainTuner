@@ -353,6 +353,7 @@
 #define __INT8_MAX__ 0x7f
 #define __LONG_WIDTH__ 64
 #define __UINT_FAST32_TYPE__ long unsigned int
+#define QT_SERIALPORT_LIB 1
 #define __CHAR32_TYPE__ unsigned int
 #define __FLT_MAX__ 3.40282346638528859811704183484516925e+38F
 #define __cpp_constexpr 201603

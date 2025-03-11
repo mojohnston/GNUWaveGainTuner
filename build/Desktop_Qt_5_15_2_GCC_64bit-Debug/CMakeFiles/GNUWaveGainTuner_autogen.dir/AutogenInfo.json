@@ -74,7 +74,7 @@
 	"HEADER_EXTENSIONS" : [ "h", "hh", "h++", "hm", "hpp", "hxx", "in", "txx" ],
 	"INCLUDE_DIR" : "/home/labuser/Dev/GNUWaveGainTuner/build/Desktop_Qt_5_15_2_GCC_64bit-Debug/GNUWaveGainTuner_autogen/include",
 	"MOC_COMPILATION_FILE" : "/home/labuser/Dev/GNUWaveGainTuner/build/Desktop_Qt_5_15_2_GCC_64bit-Debug/GNUWaveGainTuner_autogen/mocs_compilation.cpp",
-	"MOC_DEFINITIONS" : [ "QT_CORE_LIB" ],
+	"MOC_DEFINITIONS" : [ "QT_CORE_LIB", "QT_SERIALPORT_LIB" ],
 	"MOC_DEPEND_FILTERS" : 
 	[
 		[
@@ -87,6 +87,7 @@
 		"/home/labuser/Qt/5.15.2/gcc_64/include",
 		"/home/labuser/Qt/5.15.2/gcc_64/include/QtCore",
 		"/home/labuser/Qt/5.15.2/gcc_64/mkspecs/linux-g++",
+		"/home/labuser/Qt/5.15.2/gcc_64/include/QtSerialPort",
 		"/usr/include/c++/8",
 		"/usr/include/c++/8/x86_64-redhat-linux",
 		"/usr/include/c++/8/backward",

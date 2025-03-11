@@ -50,50 +50,50 @@ cmake_ninja_workdir = /home/labuser/Dev/GNUWaveGainTuner/build/Desktop_Qt_5_15_2
 build cmake_object_order_depends_target_GNUWaveGainTuner: phony || GNUWaveGainTuner_autogen GNUWaveGainTuner_autogen/mocs_compilation.cpp GNUWaveGainTuner_autogen/timestamp GNUWaveGainTuner_autogen_timestamp_deps
 
 build CMakeFiles/GNUWaveGainTuner.dir/GNUWaveGainTuner_autogen/mocs_compilation.cpp.o: CXX_COMPILER__GNUWaveGainTuner_unscanned_Debug /home/labuser/Dev/GNUWaveGainTuner/build/Desktop_Qt_5_15_2_GCC_64bit-Debug/GNUWaveGainTuner_autogen/mocs_compilation.cpp || cmake_object_order_depends_target_GNUWaveGainTuner
-  DEFINES = -DQT_CORE_LIB
+  DEFINES = -DQT_CORE_LIB -DQT_SERIALPORT_LIB
   DEP_FILE = CMakeFiles/GNUWaveGainTuner.dir/GNUWaveGainTuner_autogen/mocs_compilation.cpp.o.d
   FLAGS = -DQT_QML_DEBUG -g -std=gnu++17 -fdiagnostics-color=always -fPIC
-  INCLUDES = -I/home/labuser/Dev/GNUWaveGainTuner/build/Desktop_Qt_5_15_2_GCC_64bit-Debug/GNUWaveGainTuner_autogen/include -isystem /home/labuser/Qt/5.15.2/gcc_64/include -isystem /home/labuser/Qt/5.15.2/gcc_64/include/QtCore -isystem /home/labuser/Qt/5.15.2/gcc_64/./mkspecs/linux-g++
+  INCLUDES = -I/home/labuser/Dev/GNUWaveGainTuner/build/Desktop_Qt_5_15_2_GCC_64bit-Debug/GNUWaveGainTuner_autogen/include -isystem /home/labuser/Qt/5.15.2/gcc_64/include -isystem /home/labuser/Qt/5.15.2/gcc_64/include/QtCore -isystem /home/labuser/Qt/5.15.2/gcc_64/./mkspecs/linux-g++ -isystem /home/labuser/Qt/5.15.2/gcc_64/include/QtSerialPort
   OBJECT_DIR = CMakeFiles/GNUWaveGainTuner.dir
   OBJECT_FILE_DIR = CMakeFiles/GNUWaveGainTuner.dir/GNUWaveGainTuner_autogen
 
 build CMakeFiles/GNUWaveGainTuner.dir/main.cpp.o: CXX_COMPILER__GNUWaveGainTuner_unscanned_Debug /home/labuser/Dev/GNUWaveGainTuner/main.cpp || cmake_object_order_depends_target_GNUWaveGainTuner
-  DEFINES = -DQT_CORE_LIB
+  DEFINES = -DQT_CORE_LIB -DQT_SERIALPORT_LIB
   DEP_FILE = CMakeFiles/GNUWaveGainTuner.dir/main.cpp.o.d
   FLAGS = -DQT_QML_DEBUG -g -std=gnu++17 -fdiagnostics-color=always -fPIC
-  INCLUDES = -I/home/labuser/Dev/GNUWaveGainTuner/build/Desktop_Qt_5_15_2_GCC_64bit-Debug/GNUWaveGainTuner_autogen/include -isystem /home/labuser/Qt/5.15.2/gcc_64/include -isystem /home/labuser/Qt/5.15.2/gcc_64/include/QtCore -isystem /home/labuser/Qt/5.15.2/gcc_64/./mkspecs/linux-g++
+  INCLUDES = -I/home/labuser/Dev/GNUWaveGainTuner/build/Desktop_Qt_5_15_2_GCC_64bit-Debug/GNUWaveGainTuner_autogen/include -isystem /home/labuser/Qt/5.15.2/gcc_64/include -isystem /home/labuser/Qt/5.15.2/gcc_64/include/QtCore -isystem /home/labuser/Qt/5.15.2/gcc_64/./mkspecs/linux-g++ -isystem /home/labuser/Qt/5.15.2/gcc_64/include/QtSerialPort
   OBJECT_DIR = CMakeFiles/GNUWaveGainTuner.dir
   OBJECT_FILE_DIR = CMakeFiles/GNUWaveGainTuner.dir
 
 build CMakeFiles/GNUWaveGainTuner.dir/pythonrunner.cpp.o: CXX_COMPILER__GNUWaveGainTuner_unscanned_Debug /home/labuser/Dev/GNUWaveGainTuner/pythonrunner.cpp || cmake_object_order_depends_target_GNUWaveGainTuner
-  DEFINES = -DQT_CORE_LIB
+  DEFINES = -DQT_CORE_LIB -DQT_SERIALPORT_LIB
   DEP_FILE = CMakeFiles/GNUWaveGainTuner.dir/pythonrunner.cpp.o.d
   FLAGS = -DQT_QML_DEBUG -g -std=gnu++17 -fdiagnostics-color=always -fPIC
-  INCLUDES = -I/home/labuser/Dev/GNUWaveGainTuner/build/Desktop_Qt_5_15_2_GCC_64bit-Debug/GNUWaveGainTuner_autogen/include -isystem /home/labuser/Qt/5.15.2/gcc_64/include -isystem /home/labuser/Qt/5.15.2/gcc_64/include/QtCore -isystem /home/labuser/Qt/5.15.2/gcc_64/./mkspecs/linux-g++
+  INCLUDES = -I/home/labuser/Dev/GNUWaveGainTuner/build/Desktop_Qt_5_15_2_GCC_64bit-Debug/GNUWaveGainTuner_autogen/include -isystem /home/labuser/Qt/5.15.2/gcc_64/include -isystem /home/labuser/Qt/5.15.2/gcc_64/include/QtCore -isystem /home/labuser/Qt/5.15.2/gcc_64/./mkspecs/linux-g++ -isystem /home/labuser/Qt/5.15.2/gcc_64/include/QtSerialPort
   OBJECT_DIR = CMakeFiles/GNUWaveGainTuner.dir
   OBJECT_FILE_DIR = CMakeFiles/GNUWaveGainTuner.dir
 
 build CMakeFiles/GNUWaveGainTuner.dir/amplifierserial.cpp.o: CXX_COMPILER__GNUWaveGainTuner_unscanned_Debug /home/labuser/Dev/GNUWaveGainTuner/amplifierserial.cpp || cmake_object_order_depends_target_GNUWaveGainTuner
-  DEFINES = -DQT_CORE_LIB
+  DEFINES = -DQT_CORE_LIB -DQT_SERIALPORT_LIB
   DEP_FILE = CMakeFiles/GNUWaveGainTuner.dir/amplifierserial.cpp.o.d
   FLAGS = -DQT_QML_DEBUG -g -std=gnu++17 -fdiagnostics-color=always -fPIC
-  INCLUDES = -I/home/labuser/Dev/GNUWaveGainTuner/build/Desktop_Qt_5_15_2_GCC_64bit-Debug/GNUWaveGainTuner_autogen/include -isystem /home/labuser/Qt/5.15.2/gcc_64/include -isystem /home/labuser/Qt/5.15.2/gcc_64/include/QtCore -isystem /home/labuser/Qt/5.15.2/gcc_64/./mkspecs/linux-g++
+  INCLUDES = -I/home/labuser/Dev/GNUWaveGainTuner/build/Desktop_Qt_5_15_2_GCC_64bit-Debug/GNUWaveGainTuner_autogen/include -isystem /home/labuser/Qt/5.15.2/gcc_64/include -isystem /home/labuser/Qt/5.15.2/gcc_64/include/QtCore -isystem /home/labuser/Qt/5.15.2/gcc_64/./mkspecs/linux-g++ -isystem /home/labuser/Qt/5.15.2/gcc_64/include/QtSerialPort
   OBJECT_DIR = CMakeFiles/GNUWaveGainTuner.dir
   OBJECT_FILE_DIR = CMakeFiles/GNUWaveGainTuner.dir
 
 build CMakeFiles/GNUWaveGainTuner.dir/waveformtuner.cpp.o: CXX_COMPILER__GNUWaveGainTuner_unscanned_Debug /home/labuser/Dev/GNUWaveGainTuner/waveformtuner.cpp || cmake_object_order_depends_target_GNUWaveGainTuner
-  DEFINES = -DQT_CORE_LIB
+  DEFINES = -DQT_CORE_LIB -DQT_SERIALPORT_LIB
   DEP_FILE = CMakeFiles/GNUWaveGainTuner.dir/waveformtuner.cpp.o.d
   FLAGS = -DQT_QML_DEBUG -g -std=gnu++17 -fdiagnostics-color=always -fPIC
-  INCLUDES = -I/home/labuser/Dev/GNUWaveGainTuner/build/Desktop_Qt_5_15_2_GCC_64bit-Debug/GNUWaveGainTuner_autogen/include -isystem /home/labuser/Qt/5.15.2/gcc_64/include -isystem /home/labuser/Qt/5.15.2/gcc_64/include/QtCore -isystem /home/labuser/Qt/5.15.2/gcc_64/./mkspecs/linux-g++
+  INCLUDES = -I/home/labuser/Dev/GNUWaveGainTuner/build/Desktop_Qt_5_15_2_GCC_64bit-Debug/GNUWaveGainTuner_autogen/include -isystem /home/labuser/Qt/5.15.2/gcc_64/include -isystem /home/labuser/Qt/5.15.2/gcc_64/include/QtCore -isystem /home/labuser/Qt/5.15.2/gcc_64/./mkspecs/linux-g++ -isystem /home/labuser/Qt/5.15.2/gcc_64/include/QtSerialPort
   OBJECT_DIR = CMakeFiles/GNUWaveGainTuner.dir
   OBJECT_FILE_DIR = CMakeFiles/GNUWaveGainTuner.dir
 
 build CMakeFiles/GNUWaveGainTuner.dir/pythoneditor.cpp.o: CXX_COMPILER__GNUWaveGainTuner_unscanned_Debug /home/labuser/Dev/GNUWaveGainTuner/pythoneditor.cpp || cmake_object_order_depends_target_GNUWaveGainTuner
-  DEFINES = -DQT_CORE_LIB
+  DEFINES = -DQT_CORE_LIB -DQT_SERIALPORT_LIB
   DEP_FILE = CMakeFiles/GNUWaveGainTuner.dir/pythoneditor.cpp.o.d
   FLAGS = -DQT_QML_DEBUG -g -std=gnu++17 -fdiagnostics-color=always -fPIC
-  INCLUDES = -I/home/labuser/Dev/GNUWaveGainTuner/build/Desktop_Qt_5_15_2_GCC_64bit-Debug/GNUWaveGainTuner_autogen/include -isystem /home/labuser/Qt/5.15.2/gcc_64/include -isystem /home/labuser/Qt/5.15.2/gcc_64/include/QtCore -isystem /home/labuser/Qt/5.15.2/gcc_64/./mkspecs/linux-g++
+  INCLUDES = -I/home/labuser/Dev/GNUWaveGainTuner/build/Desktop_Qt_5_15_2_GCC_64bit-Debug/GNUWaveGainTuner_autogen/include -isystem /home/labuser/Qt/5.15.2/gcc_64/include -isystem /home/labuser/Qt/5.15.2/gcc_64/include/QtCore -isystem /home/labuser/Qt/5.15.2/gcc_64/./mkspecs/linux-g++ -isystem /home/labuser/Qt/5.15.2/gcc_64/include/QtSerialPort
   OBJECT_DIR = CMakeFiles/GNUWaveGainTuner.dir
   OBJECT_FILE_DIR = CMakeFiles/GNUWaveGainTuner.dir
 
@@ -105,9 +105,9 @@ build CMakeFiles/GNUWaveGainTuner.dir/pythoneditor.cpp.o: CXX_COMPILER__GNUWaveG
 #############################################
 # Link the executable GNUWaveGainTuner
 
-build GNUWaveGainTuner: CXX_EXECUTABLE_LINKER__GNUWaveGainTuner_Debug CMakeFiles/GNUWaveGainTuner.dir/GNUWaveGainTuner_autogen/mocs_compilation.cpp.o CMakeFiles/GNUWaveGainTuner.dir/main.cpp.o CMakeFiles/GNUWaveGainTuner.dir/pythonrunner.cpp.o CMakeFiles/GNUWaveGainTuner.dir/amplifierserial.cpp.o CMakeFiles/GNUWaveGainTuner.dir/waveformtuner.cpp.o CMakeFiles/GNUWaveGainTuner.dir/pythoneditor.cpp.o | /home/labuser/Qt/5.15.2/gcc_64/lib/libQt5Core.so.5.15.2 || GNUWaveGainTuner_autogen GNUWaveGainTuner_autogen_timestamp_deps
+build GNUWaveGainTuner: CXX_EXECUTABLE_LINKER__GNUWaveGainTuner_Debug CMakeFiles/GNUWaveGainTuner.dir/GNUWaveGainTuner_autogen/mocs_compilation.cpp.o CMakeFiles/GNUWaveGainTuner.dir/main.cpp.o CMakeFiles/GNUWaveGainTuner.dir/pythonrunner.cpp.o CMakeFiles/GNUWaveGainTuner.dir/amplifierserial.cpp.o CMakeFiles/GNUWaveGainTuner.dir/waveformtuner.cpp.o CMakeFiles/GNUWaveGainTuner.dir/pythoneditor.cpp.o | /home/labuser/Qt/5.15.2/gcc_64/lib/libQt5SerialPort.so.5.15.2 /home/labuser/Qt/5.15.2/gcc_64/lib/libQt5Core.so.5.15.2 || GNUWaveGainTuner_autogen GNUWaveGainTuner_autogen_timestamp_deps
   FLAGS = -DQT_QML_DEBUG -g
-  LINK_LIBRARIES = -Wl,-rpath,/home/labuser/Qt/5.15.2/gcc_64/lib:  /home/labuser/Qt/5.15.2/gcc_64/lib/libQt5Core.so.5.15.2
+  LINK_LIBRARIES = -Wl,-rpath,/home/labuser/Qt/5.15.2/gcc_64/lib:  /home/labuser/Qt/5.15.2/gcc_64/lib/libQt5SerialPort.so.5.15.2  /home/labuser/Qt/5.15.2/gcc_64/lib/libQt5Core.so.5.15.2
   OBJECT_DIR = CMakeFiles/GNUWaveGainTuner.dir
   POST_BUILD = :
   PRE_LINK = :
