@@ -1,8 +1,6 @@
-/home/labuser/Dev/GNUWaveGainTuner/build/Desktop_Qt_5_15_2_GCC_64bit-Debug/GNUWaveGainTuner_autogen/EWIEGA46WW/moc_amplifierserial.cpp: /home/labuser/Dev/GNUWaveGainTuner/amplifierserial.h \
+/home/labuser/Dev/GNUWaveGainTuner/build/Desktop_Qt_5_15_2_GCC_64bit-Debug/GNUWaveGainTuner_autogen/EWIEGA46WW/moc_pythoneditor.cpp: /home/labuser/Dev/GNUWaveGainTuner/pythoneditor.h \
   /home/labuser/Dev/GNUWaveGainTuner/build/Desktop_Qt_5_15_2_GCC_64bit-Debug/GNUWaveGainTuner_autogen/moc_predefs.h \
-  /home/labuser/Qt/5.15.2/gcc_64/include/QtCore/QMap \
   /home/labuser/Qt/5.15.2/gcc_64/include/QtCore/QObject \
-  /home/labuser/Qt/5.15.2/gcc_64/include/QtCore/QString \
   /home/labuser/Qt/5.15.2/gcc_64/include/QtCore/qalgorithms.h \
   /home/labuser/Qt/5.15.2/gcc_64/include/QtCore/qarraydata.h \
   /home/labuser/Qt/5.15.2/gcc_64/include/QtCore/qatomic.h \
@@ -20,11 +18,9 @@
   /home/labuser/Qt/5.15.2/gcc_64/include/QtCore/qglobal.h \
   /home/labuser/Qt/5.15.2/gcc_64/include/QtCore/qglobalstatic.h \
   /home/labuser/Qt/5.15.2/gcc_64/include/QtCore/qhashfunctions.h \
-  /home/labuser/Qt/5.15.2/gcc_64/include/QtCore/qiodevice.h \
   /home/labuser/Qt/5.15.2/gcc_64/include/QtCore/qiterator.h \
   /home/labuser/Qt/5.15.2/gcc_64/include/QtCore/qlist.h \
   /home/labuser/Qt/5.15.2/gcc_64/include/QtCore/qlogging.h \
-  /home/labuser/Qt/5.15.2/gcc_64/include/QtCore/qmap.h \
   /home/labuser/Qt/5.15.2/gcc_64/include/QtCore/qmetatype.h \
   /home/labuser/Qt/5.15.2/gcc_64/include/QtCore/qnamespace.h \
   /home/labuser/Qt/5.15.2/gcc_64/include/QtCore/qnumeric.h \
@@ -50,11 +46,6 @@
   /home/labuser/Qt/5.15.2/gcc_64/include/QtCore/qvarlengtharray.h \
   /home/labuser/Qt/5.15.2/gcc_64/include/QtCore/qvector.h \
   /home/labuser/Qt/5.15.2/gcc_64/include/QtCore/qversiontagging.h \
-  /home/labuser/Qt/5.15.2/gcc_64/include/QtSerialPort/QSerialPort \
-  /home/labuser/Qt/5.15.2/gcc_64/include/QtSerialPort/QSerialPortInfo \
-  /home/labuser/Qt/5.15.2/gcc_64/include/QtSerialPort/qserialport.h \
-  /home/labuser/Qt/5.15.2/gcc_64/include/QtSerialPort/qserialportglobal.h \
-  /home/labuser/Qt/5.15.2/gcc_64/include/QtSerialPort/qserialportinfo.h \
   /usr/include/assert.h \
   /usr/include/bits/byteswap.h \
   /usr/include/bits/cpu-set.h \

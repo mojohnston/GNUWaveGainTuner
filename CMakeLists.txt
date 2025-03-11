@@ -19,7 +19,12 @@ add_executable(GNUWaveGainTuner
   waveformtuner.h waveformtuner.cpp
   pythoneditor.h pythoneditor.cpp
 )
-target_link_libraries(GNUWaveGainTuner Qt${QT_VERSION_MAJOR}::Core)
+
+target_link_libraries(GNUWaveGainTuner
+    PRIVATE
+        Qt${QT_VERSION_MAJOR}::Core
+        Qt${QT_VERSION_MAJOR}::SerialPort
+)
 
 include(GNUInstallDirs)
 install(TARGETS GNUWaveGainTuner
