@@ -10,7 +10,7 @@ int main(int argc, char *argv[])
     QTextStream cout(stdout);
 
     // Prompt for file path.
-    cout << "Enter the full path to the Python file you wish to edit: " << flush;
+    cout << "Enter the full path to the Python file you wish to edit: " << Qt::flush;
     QString filePath = cin.readLine().trimmed();
     if (filePath.isEmpty()) {
         cout << "Filename cannot be empty. Exiting." << "\n";
@@ -18,7 +18,7 @@ int main(int argc, char *argv[])
     }
 
     // Prompt for channel.
-    cout << "Enter the channel to edit (L1 or L2): " << flush;
+    cout << "Enter the channel to edit (L1 or L2): " << Qt::flush;
     QString channelInput = cin.readLine().trimmed();
     int channel = -1;
     if (channelInput.compare("L1", Qt::CaseInsensitive) == 0)
@@ -31,7 +31,7 @@ int main(int argc, char *argv[])
     }
 
     // Prompt for gain value.
-    cout << "Enter the gain value (integer between -10 and 60): " << flush;
+    cout << "Enter the gain value (integer between -10 and 60): " << Qt::flush;
     QString gainInput = cin.readLine().trimmed();
     bool ok = false;
     int gainValue = gainInput.toInt(&ok);
@@ -42,7 +42,7 @@ int main(int argc, char *argv[])
 
     // Call the editGainValue function.
     PythonEditor editor;
-    if (editor.editGainValue(filePath, static_cast<double>(gainValue), channel)) {
+    if (editor.editGainValue(filePath, gainValue, channel)) {
         cout << "Successfully updated gain value in file: " << filePath << "\n";
     } else {
         cout << "Failed to update gain value in file: " << filePath << "\n";
