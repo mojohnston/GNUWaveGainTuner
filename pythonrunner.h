@@ -13,8 +13,6 @@ public:
     explicit PythonRunner(const QString &scriptPath, QObject *parent = nullptr);
     ~PythonRunner();
 
-    // The file must be executable with a proper shebang
-    // #!/usr/bin/env python3
     void startScript();
     void stopScript();
 
@@ -23,8 +21,6 @@ signals:
     void scriptFinished(int exitCode, QProcess::ExitStatus exitStatus);
     void scriptStarted();
     void scriptStopped();
-    // Emitted when a threshold is detected.
-    // marker: "U" or "N"; window: the measured window in ms.
     void thresholdDetected(const QString &marker, qint64 window);
 
 private slots:
@@ -32,9 +28,10 @@ private slots:
     void handleFinished(int exitCode, QProcess::ExitStatus exitStatus);
 
 private:
+    void createProcess();
+
     QString m_scriptPath;
     QProcess *m_process;
-
     QList<qint64> m_uTimes;
     QList<qint64> m_nTimes;
 };

@@ -30,7 +30,7 @@ int main(int argc, char *argv[])
     cout << "Enter the minimum power: " << Qt::flush;
     QString minPowerStr = cin.readLine().trimmed();
     bool ok = false;
-    int minPower = minPowerStr.toInt(&ok);
+    double minPower = minPowerStr.toDouble(&ok);
     if (!ok) {
         cout << "Invalid minimum power. Exiting." << "\n";
         return -1;
@@ -39,7 +39,7 @@ int main(int argc, char *argv[])
     // Prompt for maximum power.
     cout << "Enter the maximum power: " << Qt::flush;
     QString maxPowerStr = cin.readLine().trimmed();
-    int maxPower = maxPowerStr.toInt(&ok);
+    double maxPower = maxPowerStr.toDouble(&ok);
     if (!ok) {
         cout << "Invalid maximum power. Exiting." << "\n";
         return -1;

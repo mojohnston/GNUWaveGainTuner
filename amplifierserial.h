@@ -6,6 +6,7 @@
 #include <QString>
 #include <QSerialPort>
 #include <QSerialPortInfo>
+#include <QByteArray>
 
 class AmplifierSerial : public QObject
 {
@@ -14,7 +15,7 @@ public:
     explicit AmplifierSerial(QObject *parent = nullptr);
     ~AmplifierSerial();
 
-    // Searches available serial ports for amp devices (whose system location contains "amp", case-insensitive) and connects to them.
+    // Searches available serial ports for amp devices (whose system location or symlink name contains "amp", case-insensitive) and connects to them.
     void searchAndConnect();
 
     // Sends a command (with a newline) to the amp specified by device name.
@@ -40,7 +41,7 @@ public:
     QStringList connectedDevices() const;
 
 signals:
-    // Emitted when an amp outputs data.
+    // Emitted when an amp outputs a complete line.
     void ampOutput(const QString &device, const QString &output);
     // Emitted when an amp outputs an error message.
     void ampError(const QString &device, const QString &errorMessage);
@@ -50,8 +51,10 @@ private slots:
     void handleReadyRead();
 
 private:
-    // Map of device name (system location) to the corresponding QSerialPort pointer.
+    // Map of device name (symlink or native name) to the corresponding QSerialPort pointer.
     QMap<QString, QSerialPort*> m_ports;
+    // Per-device buffers to accumulate incoming data.
+    QMap<QString, QByteArray> m_buffers;
 };
 
 #endif // AMPLIFIERSERIAL_H

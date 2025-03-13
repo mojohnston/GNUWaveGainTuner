@@ -18,84 +18,71 @@ public:
     explicit WaveformTuner(QObject *parent = nullptr);
     ~WaveformTuner();
 
-    // Start the tuning process with the following parameters:
-    // waveformFile: the path to the python waveform file
-    // ampModel: "x300" or "N321"
-    // minPower: desired minimum power (ALC setpoint)
-    // maxPower: desired maximum forward power
-    // critical: "HIGH" or "LOW"
+    // Now minPower and maxPower are doubles (e.g. 30.0, 48.2)
     void startTuning(const QString &waveformFile,
                      const QString &ampModel,
-                     int minPower,
-                     int maxPower,
+                     double minPower,
+                     double maxPower,
                      const QString &critical);
 
 signals:
-    // Emitted when tuning is successfully finished.
     void tuningFinished();
-    // Emitted when tuning fails.
     void tuningFailed(const QString &reason);
 
 private slots:
-    // Slot triggered by QTimer to proceed with the next state.
     void proceedAfterDelay();
-    // Slot to handle amplifier output.
     void onAmpOutput(const QString &device, const QString &output);
-    // Slot to handle amplifier fault.
     void onAmpFault(const QString &device, const QString &error);
+    void onPythonOutput(const QString &output);
 
 private:
+    // Updated state enumeration (new states for ALC phase added)
     enum TuningState {
         Idle,
-        SetInitialGain,    // Use PythonEditor to set initial gain value in the waveform file.
-        StartWaveform,     // Start waveform using PythonRunner.
-        SetModeVVA_All,    // For every discovered amp, set mode to VVA.
-        SetGain100_All,    // For every discovered amp, set gain level to 100.
-        WaitInitial,       // Wait 5 seconds to let the waveform “boot up.”
-        QueryFwdPwr,       // Query forward power repeatedly.
-        WaitForStable,     // Wait until the rolling average (of 10 readings) is stable for 3 iterations.
-        DetermineTestingAmps, // Decide which amp(s) are providing valid readings.
-        StopWaveform,      // Stop the waveform.
-        ComparePower,      // Compare measured power vs desired max power.
-        AdjustGainUp,      // Increment gain and restart.
-        AdjustGainDown,    // Decrement gain and restart.
-        SetModeALC,        // Set amplifier mode to ALC.
-        SetAlcLevel,       // Set ALC level to the user-specified minimum power.
-        QueryFwdPwrALC,    // Query forward power while in ALC mode.
-        WaitForAlcStable,  // Wait until the ALC forward power is stable.
-        FinalizeTuning,    // Final adjustments and finish.
-        RetryAfterFault    // In case of a fault, adjust gain and retry.
+        SetInitialGain,         // Step 1
+        StartWaveform,          // Step 2 (VVA phase)
+        WaitForPythonPrompt,    // Step 2b (VVA phase)
+        SetModeVVA_All,         // Step 3
+        SetGain100_All,         // Step 4
+        QueryFwdPwr,            // Step 5
+        WaitForStable,          // Step 5 continued (VVA mode)
+        StopWaveform,           // Step 6 (stop VVA waveform)
+        WaitForPythonStop,      // Wait for VVA python script to stop
+        ComparePower,           // Step 7 (compare VVA measured vs. target max)
+        AdjustGainUp,           // Step 8a
+        AdjustGainDown,         // Step 8b
+        // Now transition into ALC phase:
+        SetModeALC,             // Step 8c: set mode ALC on testing amps
+        StartWaveform_ALC,      // Step 9: start python runner for ALC phase
+        WaitForPythonPrompt_ALC,// Step 9b: wait for "Press Enter to quit:" in ALC phase and wait 5 sec
+        SetAlcLevel,            // Step 10: set ALC level to desired min power
+        QueryFwdPwrALC,         // Step 11: query FWD_PWR in ALC mode
+        WaitForAlcStable,       // Step 11 continued (ALC mode stable check)
+        FinalizeTuning,         // Step 12a: tuning complete – finalize
+        RetryAfterFault         // Step 12b: fault encountered in ALC mode; adjust and retry
     };
 
     void transitionToState(TuningState newState);
     void resetRollingAverages();
 
-    // User parameters.
+    // User parameters – now using doubles for power values.
     QString m_waveformFile;
     QString m_ampModel;      // "x300" or "N321"
-    int m_minPower;          // Minimum power (ALC setpoint)
-    int m_maxPower;          // Maximum forward power desired
+    double m_minPower;       // Minimum power (ALC setpoint)
+    double m_maxPower;       // Maximum forward power desired
     QString m_critical;      // "HIGH" or "LOW"
 
-    int m_currentGain;       // Current gain value stored in the python file.
-    // For now, we assume the python file has one channel (0). (You can expand later.)
-    int m_channel;
+    int m_currentGain;       // Current gain (stored in python file)
+    int m_channel;           // (Assumed 0 for now.)
 
-    // Helper objects.
     AmplifierSerial *m_ampSerial;
     PythonEditor   *m_pythonEditor;
-    PythonRunner   *m_pythonRunner; // Created when tuning starts.
-    QStringList m_allAmpDevices;   // List of amp devices discovered.
-    // After querying forward power, we decide which amp(s) will be used for testing.
-    QStringList m_testingAmpDevices;
+    PythonRunner   *m_pythonRunner;
+    QStringList m_allAmpDevices;   // Discovered amplifier devices
+    QStringList m_testingAmpDevices; // Devices that responded stably
 
-    QTimer *m_delayTimer;          // For inserting delays between states.
-
-    // For forward power measurement.
-    // We store rolling readings for each device.
+    QTimer *m_delayTimer;
     QMap<QString, QList<double>> m_ampReadings;
-    QMap<QString, int> m_stableCounts;  // Count how many consecutive stable iterations per amp.
-
     TuningState m_state;
 };
 
