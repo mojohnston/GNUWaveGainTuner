@@ -171,8 +171,8 @@ void WaveformTuner::transitionToState(TuningState newState)
     }
     case WaitForPythonStop:
     {
-        qDebug() << "Waiting 3 seconds for python script to stop (VVA phase).";
-        QTimer::singleShot(3000, this, [this](){ transitionToState(ComparePower); });
+        qDebug() << "Waiting 5 seconds for python script to stop (VVA phase).";
+        QTimer::singleShot(5000, this, [this](){ transitionToState(ComparePower); });
         break;
     }
     case ComparePower:
