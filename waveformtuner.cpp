@@ -39,7 +39,21 @@ void WaveformTuner::startTuning(const QString &waveformFile,
     m_minPower = minPower;
     m_maxPower = maxPower;
     m_critical = critical;
-    m_currentGain = 1;
+
+    qDebug() << "startTuning() called with parameters:" << waveformFile << ampModel << minPower << maxPower << critical;
+    m_waveformFile = waveformFile;
+    m_ampModel = ampModel;
+    m_minPower = minPower;
+    m_maxPower = maxPower;
+    m_critical = critical;
+
+    // Set the initial gain based on the amp model:
+    if (ampModel.compare("x300", Qt::CaseInsensitive) == 0)
+        m_currentGain = 0;
+    else if (ampModel.compare("N321", Qt::CaseInsensitive) == 0)
+        m_currentGain = 12;
+    else
+        m_currentGain = 0;
 
     qDebug() << "Searching for amplifier devices...";
     m_ampSerial->searchAndConnect();
@@ -171,8 +185,8 @@ void WaveformTuner::transitionToState(TuningState newState)
     }
     case WaitForPythonStop:
     {
-        qDebug() << "Waiting 5 seconds for python script to stop (VVA phase).";
-        QTimer::singleShot(5000, this, [this](){ transitionToState(ComparePower); });
+        qDebug() << "Waiting 2 seconds for python script to stop (VVA phase).";
+        QTimer::singleShot(2000, this, [this](){ transitionToState(ComparePower); });
         break;
     }
     case ComparePower:
@@ -209,7 +223,24 @@ void WaveformTuner::transitionToState(TuningState newState)
     case AdjustGainUp:
     {
         qDebug() << "Step 8a: Incrementing gain. New gain:" << (m_currentGain + 1);
+        // Check if we’re switching direction:
+        if (m_lastGainAdjustment != 1) {
+            m_gainSwapCount++;
+        }
+        m_lastGainAdjustment = 1;
+
         m_currentGain++;
+        // If oscillation has occurred 4 or more times, choose the higher gain value:
+        if (m_gainSwapCount >= 4) {
+            qDebug() << "Oscillation detected: choosing higher gain value:" << m_currentGain;
+            m_gainSwapCount = 0; // Reset the swap counter
+            if (!m_pythonEditor->editGainValue(m_waveformFile, m_currentGain, m_channel)) {
+                emit tuningFailed("Failed to set gain after oscillation.");
+                return;
+            }
+            transitionToState(StartWaveform);
+            break;
+        }
         if (!m_pythonEditor->editGainValue(m_waveformFile, m_currentGain, m_channel)) {
             emit tuningFailed("Failed to increment gain.");
             return;
@@ -220,7 +251,26 @@ void WaveformTuner::transitionToState(TuningState newState)
     case AdjustGainDown:
     {
         qDebug() << "Step 8b: Decrementing gain. New gain:" << (m_currentGain - 1);
+        // Check if we’re switching direction:
+        if (m_lastGainAdjustment != -1) {
+            m_gainSwapCount++;
+        }
+        m_lastGainAdjustment = -1;
+
         m_currentGain--;
+        // If oscillation has occurred 4 or more times, revert the last decrement
+        // and choose the higher gain value:
+        if (m_gainSwapCount >= 4) {
+            qDebug() << "Oscillation detected: reverting to higher gain value:" << (m_currentGain + 1);
+            m_currentGain++; // revert the decrement
+            m_gainSwapCount = 0; // Reset the swap counter
+            if (!m_pythonEditor->editGainValue(m_waveformFile, m_currentGain, m_channel)) {
+                emit tuningFailed("Failed to adjust gain after oscillation.");
+                return;
+            }
+            transitionToState(StartWaveform);
+            break;
+        }
         if (!m_pythonEditor->editGainValue(m_waveformFile, m_currentGain, m_channel)) {
             emit tuningFailed("Failed to decrement gain.");
             return;

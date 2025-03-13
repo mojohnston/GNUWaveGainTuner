@@ -36,6 +36,8 @@ private slots:
     void onPythonOutput(const QString &output);
 
 private:
+    int m_gainSwapCount = 0;
+    int m_lastGainAdjustment = 0;
     // Updated state enumeration (new states for ALC phase added)
     enum TuningState {
         Idle,
