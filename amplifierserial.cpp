@@ -12,7 +12,6 @@ AmplifierSerial::AmplifierSerial(QObject *parent)
 
 AmplifierSerial::~AmplifierSerial()
 {
-    // Close and delete all serial port connections.
     for (QSerialPort *port : qAsConst(m_ports)) {
         if (port->isOpen())
             port->close();
@@ -23,16 +22,12 @@ AmplifierSerial::~AmplifierSerial()
 
 void AmplifierSerial::searchAndConnect()
 {
-    // Log all available ports for debugging.
     const auto availablePorts = QSerialPortInfo::availablePorts();
-    for (const QSerialPortInfo &info : availablePorts) {
-        qDebug() << "Found port:" << info.systemLocation();
-    }
 
     // Scan /dev for symlinks matching our expected udev names.
     QDir devDir("/dev");
     QStringList filters;
-    filters << "ttyUSB_*amp*"; // adjust filter as needed
+    filters << "ttyUSB_*amp*"; // adjust filter as needed - this grabs all devices with 'amp' in their name - not case sensitive
     QFileInfoList symlinkList = devDir.entryInfoList(filters, QDir::NoDotAndDotDot | QDir::Files);
     QMap<QString, QString> symlinkMapping; // Maps target -> symlink name.
     for (const QFileInfo &info : symlinkList) {
@@ -82,8 +77,6 @@ void AmplifierSerial::searchAndConnect()
                 // Connect readyRead signal to our slot.
                 connect(port, &QSerialPort::readyRead, this, &AmplifierSerial::handleReadyRead);
                 m_ports.insert(sysLoc, port);
-                // Optionally, to connect to at most two amps, uncomment:
-                // if (m_ports.size() >= 2) break;
             } else {
                 qWarning() << "Failed to open amp:" << sysLoc << ":" << port->errorString();
                 delete port;
@@ -94,7 +87,6 @@ void AmplifierSerial::searchAndConnect()
 
 void AmplifierSerial::sendCommand(const QString &command, const QString &device)
 {
-    // Look up the QSerialPort for the given device.
     if (m_ports.contains(device)) {
         QSerialPort *port = m_ports.value(device);
         if (port->isOpen()) {
@@ -146,6 +138,7 @@ void AmplifierSerial::handleReadyRead()
     // If the response contains "dBm", assume the entire response is complete.
     if (response.contains("dBm")) {
         qDebug() << "Received from" << device << ":" << response;
+        // currently, 'ERROR' is not a valid response from the amplifiers
         if (response.contains("ERROR:"))
             emit ampError(device, response);
         else

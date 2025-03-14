@@ -15,10 +15,7 @@ public:
     explicit AmplifierSerial(QObject *parent = nullptr);
     ~AmplifierSerial();
 
-    // Searches available serial ports for amp devices (whose system location or symlink name contains "amp", case-insensitive) and connects to them.
     void searchAndConnect();
-
-    // Sends a command (with a newline) to the amp specified by device name.
     void sendCommand(const QString &command, const QString &device);
 
     // Convenience functions for amplifier commands:
@@ -43,17 +40,14 @@ public:
 signals:
     // Emitted when an amp outputs a complete line.
     void ampOutput(const QString &device, const QString &output);
-    // Emitted when an amp outputs an error message.
+    // Emitted when an amp outputs an error message. this needs editing to be useful with all available error codes, but this would affect logic, especially ALC mode checks
     void ampError(const QString &device, const QString &errorMessage);
 
 private slots:
-    // Slot to handle output from each serial port.
     void handleReadyRead();
 
 private:
-    // Map of device name (symlink or native name) to the corresponding QSerialPort pointer.
     QMap<QString, QSerialPort*> m_ports;
-    // Per-device buffers to accumulate incoming data.
     QMap<QString, QByteArray> m_buffers;
 };
 
