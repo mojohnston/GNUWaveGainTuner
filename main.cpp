@@ -5,8 +5,9 @@
 #include <QTimer>
 #include <functional>
 #include "waveformtuner.h"
+#include "wavelogger.h"
 
-// Helper function to process files sequentially.
+// Helper function now accepts a WaveLogger* parameter.
 void processNextFile(const QStringList &selectedFiles,
                      int index,
                      QCoreApplication *app,
@@ -14,7 +15,8 @@ void processNextFile(const QStringList &selectedFiles,
                      const QString &ampModel,
                      double minPower,
                      double maxPower,
-                     const QString &critical)
+                     const QString &critical,
+                     WaveLogger *sharedLogger)
 {
     if (index >= selectedFiles.size()) {
         *out << "All files processed. Exiting.\n";
@@ -25,14 +27,14 @@ void processNextFile(const QStringList &selectedFiles,
     QString file = selectedFiles.at(index);
     *out << "Processing file (" << (index + 1) << "/" << selectedFiles.size() << "): " << file << "\n";
 
-    // Create a new WaveformTuner for this file.
-    WaveformTuner *tuner = new WaveformTuner(app);
+    // Pass the shared logger to the WaveformTuner.
+    WaveformTuner *tuner = new WaveformTuner(app, sharedLogger);
 
     QObject::connect(tuner, &WaveformTuner::tuningFinished, app, [=]() {
         *out << "Tuning complete for file: " << file << "\n";
         tuner->deleteLater();
         QTimer::singleShot(3000, app, [=]() {
-            processNextFile(selectedFiles, index + 1, app, out, ampModel, minPower, maxPower, critical);
+            processNextFile(selectedFiles, index + 1, app, out, ampModel, minPower, maxPower, critical, sharedLogger);
         });
     });
 
@@ -40,7 +42,7 @@ void processNextFile(const QStringList &selectedFiles,
         *out << "Tuning failed for file: " << file << " Reason: " << reason << "\n";
         tuner->deleteLater();
         QTimer::singleShot(3000, app, [=]() {
-            processNextFile(selectedFiles, index + 1, app, out, ampModel, minPower, maxPower, critical);
+            processNextFile(selectedFiles, index + 1, app, out, ampModel, minPower, maxPower, critical, sharedLogger);
         });
     });
 
@@ -144,7 +146,10 @@ int main(int argc, char *argv[])
         return -1;
     }
 
-    // Process each selected file sequentially.
-    processNextFile(selectedFiles, 0, &app, &cout, ampModel, minPower, maxPower, critical);
+    // Create a single shared WaveLogger instance.
+    WaveLogger *sharedLogger = new WaveLogger(&app);
+
+    // Process each selected file sequentially, passing the shared logger.
+    processNextFile(selectedFiles, 0, &app, &cout, ampModel, minPower, maxPower, critical, sharedLogger);
     return app.exec();
 }

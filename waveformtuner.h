@@ -4,7 +4,7 @@
 #include <QObject>
 #include <QMap>
 #include <QString>
-#include <QList>
+#include <QStringList>
 #include "wavelogger.h"
 
 class AmplifierSerial;
@@ -16,7 +16,7 @@ class WaveformTuner : public QObject
 {
     Q_OBJECT
 public:
-    explicit WaveformTuner(QObject *parent = nullptr);
+    explicit WaveformTuner(QObject *parent = nullptr, WaveLogger *logger = nullptr);
     ~WaveformTuner();
 
     void startTuning(const QString &waveformFile,
@@ -35,19 +35,24 @@ private slots:
     void onPythonOutput(const QString &output);
 
 private:
+    // Final measured values for logging.
+    double m_finalStableMin;
+    double m_finalStableMax;
+
     int m_alcRangeCount = 0;
     double m_measuredMin;
     int m_gainStep;
     WaveLogger *m_logger = nullptr;
     int m_gainSwapCount = 0;
     int m_lastGainAdjustment = 0;
+
     enum TuningState {
         Idle,
         CheckAmpMode,
         InitialModeVVA,
         InitialVvaLevel,
         InitialModeALC,
-        InitialAlcLevel,        
+        InitialAlcLevel,
         SetInitialGain,
         StartWaveform,
         WaitForPythonPrompt,
@@ -61,13 +66,14 @@ private:
         AdjustGainDown,
         SetModeALC,
         PreSetAlc,
+        AdjustMinDown,
         StartWaveform_ALC,
         WaitForPythonPrompt_ALC,
-        SetAlcLevel,
         QueryFwdPwrALC,
         WaitForAlcStable,
         FinalizeTuning,
-        AdjustMinDown,
+        RecheckMax,     // New state for final maximum recheck
+        WaitForMaxStable, // New state to wait for stable VVA readings
         LogResults,
         RetryAfterFault
     };
@@ -75,11 +81,11 @@ private:
     void transitionToState(TuningState newState);
     void resetRollingAverages();
 
-    // User parameters – now using doubles for power values.
+    // User parameters.
     QString m_waveformFile;
     QString m_ampModel;      // "x300" or "N321"
-    double m_minPower;       // Minimum forward power
-    double m_maxPower;       // Maximum forward power
+    double m_minPower;       // Target minimum power provided by the user (used for comparisons)
+    double m_maxPower;       // Target maximum power provided by the user (used for comparisons)
     QString m_critical;      // "HIGH" or "LOW"
 
     int m_currentGain;       // Current gain (stored in python file)
@@ -88,7 +94,7 @@ private:
     AmplifierSerial *m_ampSerial;
     PythonEditor   *m_pythonEditor;
     PythonRunner   *m_pythonRunner;
-    QStringList m_allAmpDevices;   // Discovered amplifier devices
+    QStringList m_allAmpDevices;    // Discovered amplifier devices
     QStringList m_testingAmpDevices; // Devices that responded stably
 
     QTimer *m_delayTimer;

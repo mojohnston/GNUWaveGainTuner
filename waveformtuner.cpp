@@ -9,7 +9,8 @@
 #include <QRegularExpression>
 #include <QFileInfo>
 
-WaveformTuner::WaveformTuner(QObject *parent)
+// Constructor
+WaveformTuner::WaveformTuner(QObject *parent, WaveLogger *logger)
     : QObject(parent),
     m_currentGain(1),
     m_channel(0),
@@ -18,12 +19,14 @@ WaveformTuner::WaveformTuner(QObject *parent)
     m_pythonRunner(nullptr),
     m_delayTimer(new QTimer(this)),
     m_state(Idle),
-    m_logger(new WaveLogger(this)),
+    m_logger(logger ? logger : new WaveLogger(this)),
     m_gainStep(1),
     m_gainSwapCount(0),
     m_lastGainAdjustment(0),
     m_measuredMin(0.0),
-    m_alcRangeCount(0)
+    m_alcRangeCount(0),
+    m_finalStableMin(0.0),
+    m_finalStableMax(0.0)
 {
     m_delayTimer->setSingleShot(true);
     connect(m_ampSerial, &AmplifierSerial::ampOutput, this, &WaveformTuner::onAmpOutput);
@@ -31,6 +34,7 @@ WaveformTuner::WaveformTuner(QObject *parent)
     qDebug() << "WaveformTuner constructed, initial state Idle";
 }
 
+// Destructor
 WaveformTuner::~WaveformTuner()
 {
     m_ampSerial->disconnectAll();
@@ -215,8 +219,11 @@ void WaveformTuner::transitionToState(TuningState newState)
             m_gainStep = 1;
             m_delayTimer->singleShot(1000, this, [this](){ transitionToState(AdjustGainDown); });
         }
-        else
+        else {
+            // Save the measured maximum value for logging.
+            m_finalStableMax = avg;
             m_delayTimer->singleShot(1000, this, [this](){ transitionToState(SetModeALC); });
+        }
         break;
     }
     case AdjustGainUp:
@@ -249,22 +256,22 @@ void WaveformTuner::transitionToState(TuningState newState)
         break;
     case SetModeALC:
         qDebug() << "Step 8: Setting up ALC test for minimum power.";
-        for (const QString &dev : qAsConst(m_testingAmpDevices))
+        // Clear previous (VVA) readings so that ALC readings start fresh.
+        for (const QString &dev : qAsConst(m_testingAmpDevices)) {
+            m_ampReadings[dev].clear();
             m_ampSerial->setMode("ALC", dev);
-        // Increase delay to give the amp time to switch modes.
+        }
         m_delayTimer->singleShot(1500, this, [this](){ transitionToState(PreSetAlc); });
         break;
     case PreSetAlc:
         qDebug() << "Setting ALC level to" << m_minPower << "dBm.";
         for (const QString &dev : qAsConst(m_testingAmpDevices))
             m_ampSerial->setAlcLvl(m_minPower, dev);
-        // Wait longer to allow the new ALC level to settle.
         m_delayTimer->singleShot(1500, this, [this](){ transitionToState(StartWaveform_ALC); });
         break;
     case StartWaveform_ALC:
         qDebug() << "Step 9: Starting waveform in ALC mode.";
         m_pythonRunner->startScript();
-        // Immediately change state; our onPythonOutput() will pick up the prompt.
         transitionToState(WaitForPythonPrompt_ALC);
         break;
     case WaitForPythonPrompt_ALC:
@@ -273,116 +280,150 @@ void WaveformTuner::transitionToState(TuningState newState)
     case QueryFwdPwrALC:
         qDebug() << "Step 10: Querying forward power in ALC mode.";
         for (const QString &dev : qAsConst(m_testingAmpDevices)) {
-            // Clear out any previous readings for this device.
-            m_ampReadings[dev].clear();
             m_ampSerial->getFwdPwr(dev);
         }
-        m_delayTimer->singleShot(500, this, [this](){ transitionToState(WaitForAlcStable); });
+        // Allow more time for readings to accumulate.
+        m_delayTimer->singleShot(1000, this, [this](){ transitionToState(WaitForAlcStable); });
         break;
     case WaitForAlcStable: {
         const double tolerance = 0.2;
-        bool stableFound = false;
+        bool allReady = true;
         double total = 0;
-        int cnt = 0;
-        // For each device in our testing list, try to get at least three readings.
+        int count = 0;
+        // For each device, check if we have at least 3 readings and if the last three are stable.
         for (const QString &dev : qAsConst(m_testingAmpDevices)) {
             int numReadings = m_ampReadings[dev].size();
-            if (numReadings < 3)
-                m_ampSerial->getFwdPwr(dev);
-            else {
+            if (numReadings < 3) {
+                allReady = false;
+            } else {
                 QList<double> lastThree = m_ampReadings[dev].mid(numReadings - 3, 3);
                 if (qAbs(lastThree[0] - lastThree[1]) < tolerance &&
                     qAbs(lastThree[1] - lastThree[2]) < tolerance) {
-                    stableFound = true;
                     double avg = (lastThree[0] + lastThree[1] + lastThree[2]) / 3.0;
                     total += avg;
-                    cnt++;
+                    ++count;
+                } else {
+                    allReady = false;
                 }
             }
         }
-        if (stableFound && cnt > 0) {
-            m_measuredMin = total / cnt;
-            qDebug() << "ALC average reading:" << m_measuredMin;
-        } else {
-            qDebug() << "ALC readings not yet stable.";
-        }
-        const int alcRangeThreshold = 12;
-        if (m_alcRangeCount >= alcRangeThreshold) {
-            qDebug() << "Received 'ALC Range' at least" << alcRangeThreshold << "times in succession.";
-            m_pythonRunner->stopScript();
-            m_alcRangeCount = 0;
-            m_delayTimer->singleShot(1000, this, [this]() {
-                transitionToState(AdjustMinDown);
-            });
+        // If not all devices have three stable readings, request another set of readings.
+        if (!allReady || count == 0) {
+            qDebug() << "ALC readings not yet stable, scheduling another query.";
+            m_delayTimer->singleShot(1000, this, [this]() { transitionToState(QueryFwdPwrALC); });
             break;
         }
-        // For LOW-critical, adjust if the average is above target.
-        if (m_critical.compare("LOW", Qt::CaseInsensitive) == 0 &&
-            (!stableFound || (stableFound && (total / cnt) > m_minPower))) {
-            qDebug() << "LOW critical selected and measured minimum is above target. Adjusting further.";
+        double avgALC = total / count;
+        qDebug() << "ALC average reading:" << avgALC;
+        // For LOW-critical tuning: if the measured minimum exceeds the target by more than 0.2 dBm, adjust further.
+        if (m_critical.compare("LOW", Qt::CaseInsensitive) == 0 && ((avgALC - m_minPower) > 0.2)) {
+            qDebug() << "LOW critical: measured minimum (" << avgALC << "dBm) exceeds target by more than 0.2 dBm, adjusting further.";
             m_delayTimer->singleShot(1000, this, [this]() { transitionToState(AdjustMinDown); });
         } else {
+            m_finalStableMin = avgALC;
             m_delayTimer->singleShot(1000, this, [this]() { transitionToState(FinalizeTuning); });
         }
         break;
     }
+
     case AdjustMinDown:
-        qDebug() << "Lowering gain. New gain:" << (m_currentGain - 1);
+        qDebug() << "Adjusting minimum: lowering gain. New gain:" << (m_currentGain - 1);
+        // Prevent gain from going below 0.
+        if (m_currentGain <= 0) {
+            qDebug() << "Gain is already 0. Cannot lower further.";
+            if (m_logger) {
+                m_logger->debugAndLog("Tuning failed: gain cannot be lowered further for LOW critical tuning.");
+            }
+            emit tuningFailed("Gain cannot be lowered further for LOW critical tuning.");
+            return;
+        }
         m_currentGain--;
         if (!m_pythonEditor->editGainValue(m_waveformFile, m_currentGain, m_channel)) {
             emit tuningFailed("Failed to lower gain for LOW critical.");
             return;
         }
-        for (const QString &dev : qAsConst(m_testingAmpDevices))
+        // Clear ALC readings so that new ones can accumulate.
+        for (const QString &dev : qAsConst(m_testingAmpDevices)) {
             m_ampReadings[dev].clear();
-        m_delayTimer->singleShot(1000, this, [this](){ transitionToState(StartWaveform_ALC); });
+        }
+        m_pythonRunner->stopScript();
+        m_delayTimer->singleShot(1000, this, [this]() { transitionToState(StartWaveform_ALC); });
         break;
     case FinalizeTuning: {
-        qDebug() << "Step 11: Finalizing tuning.";
+        qDebug() << "Step 11: Finalizing tuning - preparing for final maximum recheck.";
         int testCount = m_testingAmpDevices.size();
         for (int i = 0; i < testCount; ++i) {
             QString dev = m_testingAmpDevices.at(i);
-            // Set the mode immediately.
             m_ampSerial->setMode("VVA", dev);
-            // Delay 500 ms before setting the gain level and clearing readings for this device.
+            // Set the gain level to 100 and clear previous readings.
             m_delayTimer->singleShot(500, this, [this, dev]() {
                 m_ampSerial->setGainLvl(100, dev);
                 m_ampReadings[dev].clear();
             });
         }
-        qDebug() << "Waiting 3 seconds for final stabilization in VVA mode.";
-        m_delayTimer->singleShot(2500, this, [this]() { transitionToState(LogResults); });
+        qDebug() << "Waiting 2.5 seconds for final stabilization in VVA mode.";
+        m_delayTimer->singleShot(2500, this, [this]() { transitionToState(RecheckMax); });
+        break;
+    }
+    case RecheckMax: {
+        qDebug() << "Step 11a: Rechecking maximum power in VVA mode.";
+        // For each testing device, clear old readings and get a new forward power reading.
+        for (const QString &dev : qAsConst(m_testingAmpDevices)) {
+            m_ampReadings[dev].clear();
+            m_ampSerial->getFwdPwr(dev);
+        }
+        // Wait a bit for readings to accumulate.
+        m_delayTimer->singleShot(1000, this, [this]() { transitionToState(WaitForMaxStable); });
+        break;
+    }
+    case WaitForMaxStable: {
+        const double tolerance = 0.01; // use a tighter tolerance for VVA measurements
+        bool allReady = true;
+        double total = 0;
+        int count = 0;
+        for (const QString &dev : qAsConst(m_testingAmpDevices)) {
+            int numReadings = m_ampReadings[dev].size();
+            if (numReadings < 3) {
+                allReady = false;
+            } else {
+                QList<double> lastThree = m_ampReadings[dev].mid(numReadings - 3, 3);
+                if (qAbs(lastThree[0] - lastThree[1]) < tolerance &&
+                    qAbs(lastThree[1] - lastThree[2]) < tolerance) {
+                    double avg = (lastThree[0] + lastThree[1] + lastThree[2]) / 3.0;
+                    total += avg;
+                    ++count;
+                } else {
+                    allReady = false;
+                }
+            }
+        }
+        if (!allReady || count == 0) {
+            qDebug() << "Final maximum readings not yet stable, scheduling another query.";
+            // Issue another query for each device.
+            for (const QString &dev : qAsConst(m_testingAmpDevices)) {
+                m_ampSerial->getFwdPwr(dev);
+            }
+            m_delayTimer->singleShot(1000, this, [this]() { transitionToState(WaitForMaxStable); });
+            break;
+        }
+        double avgMax = total / count;
+        qDebug() << "Final maximum power reading:" << avgMax;
+        m_finalStableMax = avgMax;
+        m_delayTimer->singleShot(1000, this, [this]() { transitionToState(LogResults); });
         break;
     }
     case LogResults: {
-        int testCount = m_testingAmpDevices.size();
-        for (int i = 0; i < testCount; ++i)
-            m_ampSerial->getFwdPwr(m_testingAmpDevices.at(i));
-        m_delayTimer->singleShot(1000, this, [this]() {
-            double finalMaxPwr = 0.0;
-            bool found = false;
-            for (const QString &dev : qAsConst(m_testingAmpDevices)) {
-                const QList<double> &readings = m_ampReadings[dev];
-                for (double r : readings) {
-                    if (!found || r > finalMaxPwr) {
-                        finalMaxPwr = r;
-                        found = true;
-                    }
-                }
-            }
-            QFileInfo fileInfo(m_waveformFile);
-            QString fileName = fileInfo.fileName();
-            // For HIGH-critical, use our measured minimum (m_measuredMin)
-            double finalMin = (m_critical.compare("HIGH", Qt::CaseInsensitive) == 0) ? m_measuredMin : m_minPower;
-            QString logMsg = QString("Waveform %1 is tuned to a minimum power of %2 dBm and a maximum power of %3 dBm")
-                                 .arg(fileName)
-                                 .arg(finalMin)
-                                 .arg(finalMaxPwr, 0, 'f', 1);
-            if (m_logger)
-                m_logger->debugAndLog(logMsg);
-            m_pythonRunner->stopScript();
-            emit tuningFinished();
-        });
+        // Log the measured values.
+        QFileInfo fileInfo(m_waveformFile);
+        QString fileName = fileInfo.fileName();
+        QString logMsg = QString("Waveform %1 is tuned to a minimum power of %2 dBm and a maximum power of %3 dBm")
+                             .arg(fileName)
+                             .arg(m_finalStableMin, 0, 'f', 1)
+                             .arg(m_finalStableMax, 0, 'f', 1);
+        if (m_logger)
+            m_logger->debugAndLog(logMsg);
+        m_pythonRunner->stopScript();
+        emit tuningFinished();
         break;
     }
     case RetryAfterFault:
@@ -433,7 +474,6 @@ void WaveformTuner::onAmpOutput(const QString &device, const QString &output)
             return;
         }
     }
-    // During the ALC phase, check for "ALC Range" responses.
     if (m_state == QueryFwdPwrALC || m_state == WaitForAlcStable) {
         if (output.contains("ALC Range")) {
             m_alcRangeCount++;
@@ -474,10 +514,9 @@ void WaveformTuner::onPythonOutput(const QString &output)
         output.contains("Press Enter to quit"))
     {
         qDebug() << "Python prompt detected:" << output << "in state" << m_state;
-        // For the ALC branch, wait a bit longer before transitioning.
         if (m_state == WaitForPythonPrompt_ALC)
             m_delayTimer->singleShot(1000, this, [this]() { transitionToState(QueryFwdPwrALC); });
-        else // for VVA branch
+        else
             m_delayTimer->singleShot(500, this, [this]() { transitionToState(SetModeVVA_All); });
     }
 }
