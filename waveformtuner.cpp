@@ -33,6 +33,7 @@ WaveformTuner::WaveformTuner(QObject *parent)
 
 WaveformTuner::~WaveformTuner()
 {
+    m_ampSerial->disconnectAll();
 }
 
 void WaveformTuner::startTuning(const QString &waveformFile,
@@ -57,6 +58,7 @@ void WaveformTuner::startTuning(const QString &waveformFile,
     else
         m_currentGain = 0;
 
+    m_ampSerial->disconnectAll();
     qDebug() << "Searching for amplifier devices...";
     m_ampSerial->searchAndConnect();
     m_allAmpDevices = m_ampSerial->connectedDevices();
@@ -249,26 +251,32 @@ void WaveformTuner::transitionToState(TuningState newState)
         qDebug() << "Step 8: Setting up ALC test for minimum power.";
         for (const QString &dev : qAsConst(m_testingAmpDevices))
             m_ampSerial->setMode("ALC", dev);
-        m_delayTimer->singleShot(1000, this, [this](){ transitionToState(PreSetAlc); });
+        // Increase delay to give the amp time to switch modes.
+        m_delayTimer->singleShot(1500, this, [this](){ transitionToState(PreSetAlc); });
         break;
     case PreSetAlc:
         qDebug() << "Setting ALC level to" << m_minPower << "dBm.";
         for (const QString &dev : qAsConst(m_testingAmpDevices))
             m_ampSerial->setAlcLvl(m_minPower, dev);
-        m_delayTimer->singleShot(1000, this, [this](){ transitionToState(StartWaveform_ALC); });
+        // Wait longer to allow the new ALC level to settle.
+        m_delayTimer->singleShot(1500, this, [this](){ transitionToState(StartWaveform_ALC); });
         break;
     case StartWaveform_ALC:
-        qDebug() << "Step 9: Starting waveform.";
+        qDebug() << "Step 9: Starting waveform in ALC mode.";
         m_pythonRunner->startScript();
+        // Immediately change state; our onPythonOutput() will pick up the prompt.
         transitionToState(WaitForPythonPrompt_ALC);
         break;
     case WaitForPythonPrompt_ALC:
-        qDebug() << "Waiting for waveform to start...";
+        qDebug() << "Waiting for Python prompt in ALC mode...";
         break;
     case QueryFwdPwrALC:
-        qDebug() << "Step 10: Querying forward power.";
-        for (const QString &dev : qAsConst(m_testingAmpDevices))
+        qDebug() << "Step 10: Querying forward power in ALC mode.";
+        for (const QString &dev : qAsConst(m_testingAmpDevices)) {
+            // Clear out any previous readings for this device.
+            m_ampReadings[dev].clear();
             m_ampSerial->getFwdPwr(dev);
+        }
         m_delayTimer->singleShot(500, this, [this](){ transitionToState(WaitForAlcStable); });
         break;
     case WaitForAlcStable: {
@@ -276,6 +284,7 @@ void WaveformTuner::transitionToState(TuningState newState)
         bool stableFound = false;
         double total = 0;
         int cnt = 0;
+        // For each device in our testing list, try to get at least three readings.
         for (const QString &dev : qAsConst(m_testingAmpDevices)) {
             int numReadings = m_ampReadings[dev].size();
             if (numReadings < 3)
@@ -291,8 +300,12 @@ void WaveformTuner::transitionToState(TuningState newState)
                 }
             }
         }
-        if (stableFound && cnt > 0)
-            qDebug() << "ALC average reading:" << (total/cnt);
+        if (stableFound && cnt > 0) {
+            m_measuredMin = total / cnt;
+            qDebug() << "ALC average reading:" << m_measuredMin;
+        } else {
+            qDebug() << "ALC readings not yet stable.";
+        }
         const int alcRangeThreshold = 12;
         if (m_alcRangeCount >= alcRangeThreshold) {
             qDebug() << "Received 'ALC Range' at least" << alcRangeThreshold << "times in succession.";
@@ -303,14 +316,13 @@ void WaveformTuner::transitionToState(TuningState newState)
             });
             break;
         }
+        // For LOW-critical, adjust if the average is above target.
         if (m_critical.compare("LOW", Qt::CaseInsensitive) == 0 &&
-            (!stableFound || (total/cnt) > m_minPower)) {
+            (!stableFound || (stableFound && (total / cnt) > m_minPower))) {
             qDebug() << "LOW critical selected and measured minimum is above target. Adjusting further.";
-            m_delayTimer->singleShot(1000, this, [this](){ transitionToState(AdjustMinDown); });
+            m_delayTimer->singleShot(1000, this, [this]() { transitionToState(AdjustMinDown); });
         } else {
-            if (stableFound && cnt > 0)
-                m_measuredMin = total/cnt;
-            m_delayTimer->singleShot(1000, this, [this](){ transitionToState(FinalizeTuning); });
+            m_delayTimer->singleShot(1000, this, [this]() { transitionToState(FinalizeTuning); });
         }
         break;
     }
@@ -360,6 +372,7 @@ void WaveformTuner::transitionToState(TuningState newState)
             }
             QFileInfo fileInfo(m_waveformFile);
             QString fileName = fileInfo.fileName();
+            // For HIGH-critical, use our measured minimum (m_measuredMin)
             double finalMin = (m_critical.compare("HIGH", Qt::CaseInsensitive) == 0) ? m_measuredMin : m_minPower;
             QString logMsg = QString("Waveform %1 is tuned to a minimum power of %2 dBm and a maximum power of %3 dBm")
                                  .arg(fileName)
@@ -460,11 +473,11 @@ void WaveformTuner::onPythonOutput(const QString &output)
     if ((m_state == WaitForPythonPrompt || m_state == WaitForPythonPrompt_ALC) &&
         output.contains("Press Enter to quit"))
     {
-        m_delayTimer->singleShot(500, this, [this]() {
-            if (m_state == WaitForPythonPrompt)
-                transitionToState(SetModeVVA_All);
-            else
-                transitionToState(SetAlcLevel);
-        });
+        qDebug() << "Python prompt detected:" << output << "in state" << m_state;
+        // For the ALC branch, wait a bit longer before transitioning.
+        if (m_state == WaitForPythonPrompt_ALC)
+            m_delayTimer->singleShot(1000, this, [this]() { transitionToState(QueryFwdPwrALC); });
+        else // for VVA branch
+            m_delayTimer->singleShot(500, this, [this]() { transitionToState(SetModeVVA_All); });
     }
 }

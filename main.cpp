@@ -2,9 +2,50 @@
 #include <QTextStream>
 #include <QDir>
 #include <QStringList>
+#include <QTimer>
 #include <functional>
-#include <memory>
 #include "waveformtuner.h"
+
+// Helper function to process files sequentially.
+void processNextFile(const QStringList &selectedFiles,
+                     int index,
+                     QCoreApplication *app,
+                     QTextStream *out,
+                     const QString &ampModel,
+                     double minPower,
+                     double maxPower,
+                     const QString &critical)
+{
+    if (index >= selectedFiles.size()) {
+        *out << "All files processed. Exiting.\n";
+        app->quit();
+        return;
+    }
+
+    QString file = selectedFiles.at(index);
+    *out << "Processing file (" << (index + 1) << "/" << selectedFiles.size() << "): " << file << "\n";
+
+    // Create a new WaveformTuner for this file.
+    WaveformTuner *tuner = new WaveformTuner(app);
+
+    QObject::connect(tuner, &WaveformTuner::tuningFinished, app, [=]() {
+        *out << "Tuning complete for file: " << file << "\n";
+        tuner->deleteLater();
+        QTimer::singleShot(3000, app, [=]() {
+            processNextFile(selectedFiles, index + 1, app, out, ampModel, minPower, maxPower, critical);
+        });
+    });
+
+    QObject::connect(tuner, &WaveformTuner::tuningFailed, app, [=](const QString &reason) {
+        *out << "Tuning failed for file: " << file << " Reason: " << reason << "\n";
+        tuner->deleteLater();
+        QTimer::singleShot(3000, app, [=]() {
+            processNextFile(selectedFiles, index + 1, app, out, ampModel, minPower, maxPower, critical);
+        });
+    });
+
+    tuner->startTuning(file, ampModel, minPower, maxPower, critical);
+}
 
 int main(int argc, char *argv[])
 {
@@ -55,13 +96,13 @@ int main(int argc, char *argv[])
     QString categoryChoice = cin.readLine().trimmed();
 
     QStringList selectedFiles;
-    if (categoryChoice == "1") {
+    if (categoryChoice == "1")
         selectedFiles = l1Files;
-    } else if (categoryChoice == "2") {
+    else if (categoryChoice == "2")
         selectedFiles = l2Files;
-    } else if (categoryChoice == "3") {
+    else if (categoryChoice == "3")
         selectedFiles = l1l2Files;
-    } else {
+    else {
         cout << "Invalid selection. Exiting.\n";
         return -1;
     }
@@ -76,7 +117,7 @@ int main(int argc, char *argv[])
     }
 
     // Prompt for minimum power.
-    cout << "Enter the minimum power: " << Qt::flush;
+    cout << "Enter the target minimum power: " << Qt::flush;
     QString minPowerStr = cin.readLine().trimmed();
     bool ok = false;
     double minPower = minPowerStr.toDouble(&ok);
@@ -86,7 +127,7 @@ int main(int argc, char *argv[])
     }
 
     // Prompt for maximum power.
-    cout << "Enter the maximum power: " << Qt::flush;
+    cout << "Enter the target maximum power: " << Qt::flush;
     QString maxPowerStr = cin.readLine().trimmed();
     double maxPower = maxPowerStr.toDouble(&ok);
     if (!ok) {
@@ -95,7 +136,7 @@ int main(int argc, char *argv[])
     }
 
     // Prompt for critical level.
-    cout << "Which is critical - HIGH or LOW? " << Qt::flush;
+    cout << "Which is most important - HIGH or LOW? " << Qt::flush;
     QString critical = cin.readLine().trimmed();
     if (critical.compare("HIGH", Qt::CaseInsensitive) != 0 &&
         critical.compare("LOW", Qt::CaseInsensitive) != 0) {
@@ -103,41 +144,7 @@ int main(int argc, char *argv[])
         return -1;
     }
 
-    int totalFiles = selectedFiles.size();
-    // Use a shared_ptr for currentIndex so it stays alive for the lambda.
-    auto currentIndex = std::make_shared<int>(0);
-    // Capture pointers to app and cout so they’re copied into the lambda.
-    auto pApp = &app;
-    auto pcout = &cout;
-
-    // Define a lambda to process files sequentially.
-    std::function<void()> processNext = [=]() mutable {
-        if (*currentIndex >= totalFiles) {
-            (*pcout) << "All files processed. Exiting.\n";
-            pApp->quit();
-            return;
-        }
-        QString file = selectedFiles.at(*currentIndex);
-        (*pcout) << "Processing file (" << (*currentIndex + 1) << "/" << totalFiles << "): " << file << "\n";
-        // Create a new WaveformTuner for this file.
-        WaveformTuner *tuner = new WaveformTuner(pApp);
-        QObject::connect(tuner, &WaveformTuner::tuningFinished, pApp,
-                         [=]() mutable {
-                             (*pcout) << "Tuning complete for file: " << file << "\n";
-                             tuner->deleteLater();
-                             (*currentIndex)++;
-                             processNext();
-                         });
-        QObject::connect(tuner, &WaveformTuner::tuningFailed, pApp,
-                         [=](const QString &reason) mutable {
-                             (*pcout) << "Tuning failed for file: " << file << " Reason: " << reason << "\n";
-                             tuner->deleteLater();
-                             (*currentIndex)++;
-                             processNext();
-                         });
-        tuner->startTuning(file, ampModel, minPower, maxPower, critical);
-    };
-
-    processNext();
+    // Process each selected file sequentially.
+    processNextFile(selectedFiles, 0, &app, &cout, ampModel, minPower, maxPower, critical);
     return app.exec();
 }

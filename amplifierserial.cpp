@@ -20,6 +20,17 @@ AmplifierSerial::~AmplifierSerial()
     m_ports.clear();
 }
 
+void AmplifierSerial::disconnectAll() {
+    for (QSerialPort *port : qAsConst(m_ports)) {
+        if (port->isOpen())
+            port->close();
+        delete port;
+    }
+    m_ports.clear();
+    m_buffers.clear();
+}
+
+
 void AmplifierSerial::searchAndConnect()
 {
     const auto availablePorts = QSerialPortInfo::availablePorts();
@@ -92,14 +103,15 @@ void AmplifierSerial::sendCommand(const QString &command, const QString &device)
         if (port->isOpen()) {
             QByteArray cmd = command.toUtf8() + "\n";
             port->write(cmd);
-            qDebug() << "Sent command" << command << "to device" << device;
+            qDebug() << "Sent command:" << command << "to device:" << device;
         } else {
-            qWarning() << "Port for" << device << "is not open.";
+            qWarning() << "Port for device" << device << "is not open.";
         }
     } else {
         qWarning() << "Device" << device << "not found.";
     }
 }
+
 
 // Convenience amplifier commands:
 void AmplifierSerial::getMode(const QString &device) { sendCommand("MODE?", device); }
@@ -132,17 +144,28 @@ void AmplifierSerial::handleReadyRead()
         return;
 
     QString device = port->objectName();
-    m_buffers[device].append(port->readAll());
-    QString response = QString::fromUtf8(m_buffers[device]).trimmed();
+    QByteArray newData = port->readAll();
+    qDebug() << "Read" << newData.size() << "bytes from" << device << ":" << newData;
+    m_buffers[device].append(newData);
 
-    // If the response contains "dBm", assume the entire response is complete.
-    if (response.contains("dBm")) {
-        qDebug() << "Received from" << device << ":" << response;
-        // currently, 'ERROR' is not a valid response from the amplifiers
-        if (response.contains("ERROR:"))
-            emit ampError(device, response);
-        else
-            emit ampOutput(device, response);
+    // Debug: print the current buffer content.
+    qDebug() << "Buffer for" << device << "now:" << m_buffers[device];
+
+    // Check if the buffer contains one or more newline characters.
+    if (m_buffers[device].contains('\n')) {
+        // Split the buffer into complete lines.
+        QStringList lines = QString::fromUtf8(m_buffers[device]).split('\n', Qt::SkipEmptyParts);
+        qDebug() << "Found" << lines.size() << "complete line(s) in buffer for" << device;
+        for (const QString &line : lines) {
+            QString response = line.trimmed();
+            qDebug() << "Processed complete line from" << device << ":" << response;
+            // Emit error or output signal depending on response content.
+            if (response.contains("ERROR:"))
+                emit ampError(device, response);
+            else
+                emit ampOutput(device, response);
+        }
+        // Clear the buffer since we've processed the complete lines.
         m_buffers[device].clear();
     }
 }
