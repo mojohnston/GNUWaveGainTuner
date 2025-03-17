@@ -45,7 +45,6 @@ void AmplifierSerial::searchAndConnect()
         if (info.isSymLink()) {
             QString symlinkName = info.absoluteFilePath();
             QString target = info.symLinkTarget();
-            qDebug() << "Found symlink:" << symlinkName << "->" << target;
             symlinkMapping.insert(target, symlinkName);
         }
     }
@@ -71,7 +70,6 @@ void AmplifierSerial::searchAndConnect()
         }
         QRegularExpressionMatch match = ampRegex.match(sysLoc);
         if (match.hasMatch()) {
-            qDebug() << "Found amp device:" << sysLoc;
             QSerialPort *port = new QSerialPort(info, this);
             port->setObjectName(sysLoc); // Save the device name (symlink name if available)
 
@@ -82,7 +80,6 @@ void AmplifierSerial::searchAndConnect()
             port->setStopBits(QSerialPort::OneStop);
             port->setFlowControl(QSerialPort::NoFlowControl);
             if (port->open(QIODevice::ReadWrite)) {
-                qDebug() << "Connected to amp:" << sysLoc;
                 // Initialize the buffer for this device.
                 m_buffers.insert(sysLoc, QByteArray());
                 // Connect readyRead signal to our slot.
@@ -103,7 +100,6 @@ void AmplifierSerial::sendCommand(const QString &command, const QString &device)
         if (port->isOpen()) {
             QByteArray cmd = command.toUtf8() + "\n";
             port->write(cmd);
-            qDebug() << "Sent command:" << command << "to device:" << device;
         } else {
             qWarning() << "Port for device" << device << "is not open.";
         }
@@ -145,20 +141,14 @@ void AmplifierSerial::handleReadyRead()
 
     QString device = port->objectName();
     QByteArray newData = port->readAll();
-    qDebug() << "Read" << newData.size() << "bytes from" << device << ":" << newData;
     m_buffers[device].append(newData);
-
-    // Debug: print the current buffer content.
-    qDebug() << "Buffer for" << device << "now:" << m_buffers[device];
 
     // Check if the buffer contains one or more newline characters.
     if (m_buffers[device].contains('\n')) {
         // Split the buffer into complete lines.
         QStringList lines = QString::fromUtf8(m_buffers[device]).split('\n', Qt::SkipEmptyParts);
-        qDebug() << "Found" << lines.size() << "complete line(s) in buffer for" << device;
         for (const QString &line : lines) {
             QString response = line.trimmed();
-            qDebug() << "Processed complete line from" << device << ":" << response;
             // Emit error or output signal depending on response content.
             if (response.contains("ERROR:"))
                 emit ampError(device, response);

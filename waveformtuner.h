@@ -53,6 +53,7 @@ private:
         InitialVvaLevel,
         InitialModeALC,
         InitialAlcLevel,
+        SetOnline,
         SetInitialGain,
         StartWaveform,
         WaitForPythonPrompt,

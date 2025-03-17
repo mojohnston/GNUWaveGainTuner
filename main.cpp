@@ -91,7 +91,7 @@ int main(int argc, char *argv[])
 
     // Show counts and prompt the user for a category.
     cout << "Files found:\n";
-    cout << "L1 (excluding L1_L2): " << l1Files.size() << " files\n";
+    cout << "L1: " << l1Files.size() << " files\n";
     cout << "L2: " << l2Files.size() << " files\n";
     cout << "L1_L2: " << l1l2Files.size() << " files\n";
     cout << "Enter 1 to tune L1, 2 to tune L2, or 3 to tune L1_L2: " << Qt::flush;

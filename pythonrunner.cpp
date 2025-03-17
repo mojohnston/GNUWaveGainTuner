@@ -95,7 +95,5 @@ void PythonRunner::handleReadyRead()
 
 void PythonRunner::handleFinished(int exitCode, QProcess::ExitStatus exitStatus)
 {
-    qDebug() << "Python script finished with exit code:" << exitCode
-             << "and exit status:" << exitStatus;
     emit scriptFinished(exitCode, exitStatus);
 }
