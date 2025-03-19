@@ -162,5 +162,33 @@ void AmplifierSerial::handleReadyRead()
 
 QStringList AmplifierSerial::connectedDevices() const
 {
-    return m_ports.keys();
+    // Get the raw device list.
+    QStringList devices = m_ports.keys();
+
+    // If exactly two devices are discovered, try to re-order them.
+    if (devices.size() == 2) {
+        QString amp1, amp2;
+        for (const QString &dev : devices) {
+            // If the device name contains "L1" but not "L2" (to avoid names like "L1L2")
+            // then consider it amplifier1.
+            if (dev.contains("L1", Qt::CaseInsensitive) &&
+                !dev.contains("L1L2", Qt::CaseInsensitive) &&
+                !dev.contains("L2", Qt::CaseInsensitive)) {
+                amp1 = dev;
+            }
+            // If it clearly indicates "L2" (and not "L1L2"), mark it as amp2.
+            else if (dev.contains("L2", Qt::CaseInsensitive) &&
+                     !dev.contains("L1L2", Qt::CaseInsensitive)) {
+                amp2 = dev;
+            }
+        }
+        // If we found both amp1 and amp2, return them in that order.
+        if (!amp1.isEmpty() && !amp2.isEmpty()) {
+            return QStringList() << amp1 << amp2;
+        }
+    }
+
+    // For one device or ambiguous cases, return the original order.
+    return devices;
 }
+

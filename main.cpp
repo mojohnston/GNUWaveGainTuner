@@ -94,7 +94,7 @@ int main(int argc, char *argv[])
     cout << "L1: " << l1Files.size() << " files\n";
     cout << "L2: " << l2Files.size() << " files\n";
     cout << "L1_L2: " << l1l2Files.size() << " files\n";
-    cout << "Enter 1 to tune L1, 2 to tune L2, or 3 to tune L1_L2: " << Qt::flush;
+    cout << "Enter 1 to tune L1, 2 to tune L2, 3 to tune L1_L2, or 4 to tune All: " << Qt::flush;
     QString categoryChoice = cin.readLine().trimmed();
 
     QStringList selectedFiles;
@@ -104,6 +104,8 @@ int main(int argc, char *argv[])
         selectedFiles = l2Files;
     else if (categoryChoice == "3")
         selectedFiles = l1l2Files;
+    else if (categoryChoice == "4")
+        selectedFiles = l1Files + l2Files + l1l2Files;
     else {
         cout << "Invalid selection. Exiting.\n";
         return -1;
