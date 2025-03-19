@@ -4,7 +4,8 @@
 #include <QObject>
 #include <QMap>
 #include <QString>
-#include <QList>
+#include <QStringList>
+#include "wavelogger.h"
 
 class AmplifierSerial;
 class PythonEditor;
@@ -15,10 +16,9 @@ class WaveformTuner : public QObject
 {
     Q_OBJECT
 public:
-    explicit WaveformTuner(QObject *parent = nullptr);
+    explicit WaveformTuner(QObject *parent = nullptr, WaveLogger *logger = nullptr);
     ~WaveformTuner();
 
-    // Now minPower and maxPower are doubles (e.g. 30.0, 48.2)
     void startTuning(const QString &waveformFile,
                      const QString &ampModel,
                      double minPower,
@@ -30,46 +30,63 @@ signals:
     void tuningFailed(const QString &reason);
 
 private slots:
-    void proceedAfterDelay();
     void onAmpOutput(const QString &device, const QString &output);
     void onAmpFault(const QString &device, const QString &error);
     void onPythonOutput(const QString &output);
 
 private:
-    // Updated state enumeration (new states for ALC phase added)
+    // Final measured values for logging.
+    double m_finalStableMin;
+    double m_finalStableMax;
+
+    int m_alcRangeCount = 0;
+    double m_measuredMin;
+    int m_gainStep;
+    WaveLogger *m_logger = nullptr;
+    int m_gainSwapCount = 0;
+    int m_lastGainAdjustment = 0;
+
     enum TuningState {
         Idle,
-        SetInitialGain,         // Step 1
-        StartWaveform,          // Step 2 (VVA phase)
-        WaitForPythonPrompt,    // Step 2b (VVA phase)
-        SetModeVVA_All,         // Step 3
-        SetGain100_All,         // Step 4
-        QueryFwdPwr,            // Step 5
-        WaitForStable,          // Step 5 continued (VVA mode)
-        StopWaveform,           // Step 6 (stop VVA waveform)
-        WaitForPythonStop,      // Wait for VVA python script to stop
-        ComparePower,           // Step 7 (compare VVA measured vs. target max)
-        AdjustGainUp,           // Step 8a
-        AdjustGainDown,         // Step 8b
-        // Now transition into ALC phase:
-        SetModeALC,             // Step 8c: set mode ALC on testing amps
-        StartWaveform_ALC,      // Step 9: start python runner for ALC phase
-        WaitForPythonPrompt_ALC,// Step 9b: wait for "Press Enter to quit:" in ALC phase and wait 5 sec
-        SetAlcLevel,            // Step 10: set ALC level to desired min power
-        QueryFwdPwrALC,         // Step 11: query FWD_PWR in ALC mode
-        WaitForAlcStable,       // Step 11 continued (ALC mode stable check)
-        FinalizeTuning,         // Step 12a: tuning complete – finalize
-        RetryAfterFault         // Step 12b: fault encountered in ALC mode; adjust and retry
+        CheckAmpMode,
+        InitialModeVVA,
+        InitialVvaLevel,
+        InitialModeALC,
+        InitialAlcLevel,
+        SetOnline,
+        SetInitialGain,
+        StartWaveform,
+        WaitForPythonPrompt,
+        SetModeVVA_All,
+        SetGain100_All,
+        QueryFwdPwr,
+        WaitForStable,
+        StopWaveform,
+        ComparePower,
+        AdjustGainUp,
+        AdjustGainDown,
+        SetModeALC,
+        PreSetAlc,
+        AdjustMinDown,
+        StartWaveform_ALC,
+        WaitForPythonPrompt_ALC,
+        QueryFwdPwrALC,
+        WaitForAlcStable,
+        FinalizeTuning,
+        RecheckMax,     // New state for final maximum recheck
+        WaitForMaxStable, // New state to wait for stable VVA readings
+        LogResults,
+        RetryAfterFault
     };
 
     void transitionToState(TuningState newState);
     void resetRollingAverages();
 
-    // User parameters – now using doubles for power values.
+    // User parameters.
     QString m_waveformFile;
     QString m_ampModel;      // "x300" or "N321"
-    double m_minPower;       // Minimum power (ALC setpoint)
-    double m_maxPower;       // Maximum forward power desired
+    double m_minPower;       // Target minimum power provided by the user (used for comparisons)
+    double m_maxPower;       // Target maximum power provided by the user (used for comparisons)
     QString m_critical;      // "HIGH" or "LOW"
 
     int m_currentGain;       // Current gain (stored in python file)
@@ -78,7 +95,7 @@ private:
     AmplifierSerial *m_ampSerial;
     PythonEditor   *m_pythonEditor;
     PythonRunner   *m_pythonRunner;
-    QStringList m_allAmpDevices;   // Discovered amplifier devices
+    QStringList m_allAmpDevices;    // Discovered amplifier devices
     QStringList m_testingAmpDevices; // Devices that responded stably
 
     QTimer *m_delayTimer;

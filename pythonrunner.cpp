@@ -34,7 +34,6 @@ void PythonRunner::startScript()
     if (!m_process->waitForStarted(3000)) {
         qWarning() << "Failed to start python script:" << m_scriptPath;
     } else {
-        qDebug() << "Started python script:" << m_scriptPath;
         emit scriptStarted();
     }
 }
@@ -43,9 +42,8 @@ void PythonRunner::stopScript()
 {
     if (m_process && m_process->state() != QProcess::NotRunning) {
         m_process->terminate();
-        if (!m_process->waitForFinished(500))
+        if (!m_process->waitForFinished(3000))
             m_process->kill();
-        qDebug() << "Python script stopped.";
         emit scriptStopped();
     }
 }
@@ -54,10 +52,8 @@ void PythonRunner::handleReadyRead()
 {
     QByteArray data = m_process->readAllStandardOutput();
     QString output = QString::fromUtf8(data);
-    qDebug() << "Python output:" << output;
     emit pythonOutput(output);
 
-    // Process threshold detection as before.
     for (const QChar &c : qAsConst(output)) {
         qint64 now = QDateTime::currentMSecsSinceEpoch();
         if (c == 'U') {
@@ -99,7 +95,5 @@ void PythonRunner::handleReadyRead()
 
 void PythonRunner::handleFinished(int exitCode, QProcess::ExitStatus exitStatus)
 {
-    qDebug() << "Python script finished with exit code:" << exitCode
-             << "and exit status:" << exitStatus;
     emit scriptFinished(exitCode, exitStatus);
 }

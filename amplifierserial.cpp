@@ -12,7 +12,6 @@ AmplifierSerial::AmplifierSerial(QObject *parent)
 
 AmplifierSerial::~AmplifierSerial()
 {
-    // Close and delete all serial port connections.
     for (QSerialPort *port : qAsConst(m_ports)) {
         if (port->isOpen())
             port->close();
@@ -21,25 +20,31 @@ AmplifierSerial::~AmplifierSerial()
     m_ports.clear();
 }
 
+void AmplifierSerial::disconnectAll() {
+    for (QSerialPort *port : qAsConst(m_ports)) {
+        if (port->isOpen())
+            port->close();
+        delete port;
+    }
+    m_ports.clear();
+    m_buffers.clear();
+}
+
+
 void AmplifierSerial::searchAndConnect()
 {
-    // Log all available ports for debugging.
     const auto availablePorts = QSerialPortInfo::availablePorts();
-    for (const QSerialPortInfo &info : availablePorts) {
-        qDebug() << "Found port:" << info.systemLocation();
-    }
 
     // Scan /dev for symlinks matching our expected udev names.
     QDir devDir("/dev");
     QStringList filters;
-    filters << "ttyUSB_*amp*"; // adjust filter as needed
+    filters << "ttyUSB_*amp*"; // adjust filter as needed - this grabs all devices with 'amp' in their name - not case sensitive
     QFileInfoList symlinkList = devDir.entryInfoList(filters, QDir::NoDotAndDotDot | QDir::Files);
     QMap<QString, QString> symlinkMapping; // Maps target -> symlink name.
     for (const QFileInfo &info : symlinkList) {
         if (info.isSymLink()) {
             QString symlinkName = info.absoluteFilePath();
             QString target = info.symLinkTarget();
-            qDebug() << "Found symlink:" << symlinkName << "->" << target;
             symlinkMapping.insert(target, symlinkName);
         }
     }
@@ -65,7 +70,6 @@ void AmplifierSerial::searchAndConnect()
         }
         QRegularExpressionMatch match = ampRegex.match(sysLoc);
         if (match.hasMatch()) {
-            qDebug() << "Found amp device:" << sysLoc;
             QSerialPort *port = new QSerialPort(info, this);
             port->setObjectName(sysLoc); // Save the device name (symlink name if available)
 
@@ -76,14 +80,11 @@ void AmplifierSerial::searchAndConnect()
             port->setStopBits(QSerialPort::OneStop);
             port->setFlowControl(QSerialPort::NoFlowControl);
             if (port->open(QIODevice::ReadWrite)) {
-                qDebug() << "Connected to amp:" << sysLoc;
                 // Initialize the buffer for this device.
                 m_buffers.insert(sysLoc, QByteArray());
                 // Connect readyRead signal to our slot.
                 connect(port, &QSerialPort::readyRead, this, &AmplifierSerial::handleReadyRead);
                 m_ports.insert(sysLoc, port);
-                // Optionally, to connect to at most two amps, uncomment:
-                // if (m_ports.size() >= 2) break;
             } else {
                 qWarning() << "Failed to open amp:" << sysLoc << ":" << port->errorString();
                 delete port;
@@ -94,20 +95,19 @@ void AmplifierSerial::searchAndConnect()
 
 void AmplifierSerial::sendCommand(const QString &command, const QString &device)
 {
-    // Look up the QSerialPort for the given device.
     if (m_ports.contains(device)) {
         QSerialPort *port = m_ports.value(device);
         if (port->isOpen()) {
             QByteArray cmd = command.toUtf8() + "\n";
             port->write(cmd);
-            qDebug() << "Sent command" << command << "to device" << device;
         } else {
-            qWarning() << "Port for" << device << "is not open.";
+            qWarning() << "Port for device" << device << "is not open.";
         }
     } else {
         qWarning() << "Device" << device << "not found.";
     }
 }
+
 
 // Convenience amplifier commands:
 void AmplifierSerial::getMode(const QString &device) { sendCommand("MODE?", device); }
@@ -140,16 +140,22 @@ void AmplifierSerial::handleReadyRead()
         return;
 
     QString device = port->objectName();
-    m_buffers[device].append(port->readAll());
-    QString response = QString::fromUtf8(m_buffers[device]).trimmed();
+    QByteArray newData = port->readAll();
+    m_buffers[device].append(newData);
 
-    // If the response contains "dBm", assume the entire response is complete.
-    if (response.contains("dBm")) {
-        qDebug() << "Received from" << device << ":" << response;
-        if (response.contains("ERROR:"))
-            emit ampError(device, response);
-        else
-            emit ampOutput(device, response);
+    // Check if the buffer contains one or more newline characters.
+    if (m_buffers[device].contains('\n')) {
+        // Split the buffer into complete lines.
+        QStringList lines = QString::fromUtf8(m_buffers[device]).split('\n', Qt::SkipEmptyParts);
+        for (const QString &line : lines) {
+            QString response = line.trimmed();
+            // Emit error or output signal depending on response content.
+            if (response.contains("ERROR:"))
+                emit ampError(device, response);
+            else
+                emit ampOutput(device, response);
+        }
+        // Clear the buffer since we've processed the complete lines.
         m_buffers[device].clear();
     }
 }

@@ -18,6 +18,7 @@ add_executable(GNUWaveGainTuner
   amplifierserial.h amplifierserial.cpp
   waveformtuner.h waveformtuner.cpp
   pythoneditor.h pythoneditor.cpp
+  wavelogger.h wavelogger.cpp
 )
 
 target_link_libraries(GNUWaveGainTuner

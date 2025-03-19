@@ -2,10 +2,8 @@
 #define AMPLIFIERSERIAL_H
 
 #include <QObject>
-#include <QMap>
-#include <QString>
 #include <QSerialPort>
-#include <QSerialPortInfo>
+#include <QMap>
 #include <QByteArray>
 
 class AmplifierSerial : public QObject
@@ -14,16 +12,13 @@ class AmplifierSerial : public QObject
 public:
     explicit AmplifierSerial(QObject *parent = nullptr);
     ~AmplifierSerial();
-
-    // Searches available serial ports for amp devices (whose system location or symlink name contains "amp", case-insensitive) and connects to them.
+    void disconnectAll();
     void searchAndConnect();
-
-    // Sends a command (with a newline) to the amp specified by device name.
     void sendCommand(const QString &command, const QString &device);
 
-    // Convenience functions for amplifier commands:
+    // Convenience amplifier commands
     void getMode(const QString &device);
-    void setMode(const QString &mode, const QString &device); // mode should be "ALC" or "VVA"
+    void setMode(const QString &mode, const QString &device);
     void setStandby(const QString &device);
     void setOnline(const QString &device);
     void getFwdPwr(const QString &device);
@@ -37,24 +32,18 @@ public:
     void getSerialId(const QString &device);
     void getModelId(const QString &device);
 
-    // Public accessor to retrieve the list of connected amplifier device names.
     QStringList connectedDevices() const;
 
 signals:
-    // Emitted when an amp outputs a complete line.
     void ampOutput(const QString &device, const QString &output);
-    // Emitted when an amp outputs an error message.
-    void ampError(const QString &device, const QString &errorMessage);
+    void ampError(const QString &device, const QString &error);
 
 private slots:
-    // Slot to handle output from each serial port.
     void handleReadyRead();
 
 private:
-    // Map of device name (symlink or native name) to the corresponding QSerialPort pointer.
-    QMap<QString, QSerialPort*> m_ports;
-    // Per-device buffers to accumulate incoming data.
-    QMap<QString, QByteArray> m_buffers;
+    QMap<QString, QSerialPort*> m_ports; // Maps devices to their corresponding serial ports
+    QMap<QString, QByteArray> m_buffers; // Maps devices to their buffers for responses
 };
 
 #endif // AMPLIFIERSERIAL_H
