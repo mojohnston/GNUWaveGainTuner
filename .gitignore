@@ -1,0 +1,25 @@
+# Build folders
+/build/
+/CMakeFiles/
+/CMakeCache.txt
+/Makefile
+/cmake_install.cmake
+/compile_commands.json
+
+# Qt Creator user files
+*.pro.user*
+*.pro.user.*
+*.creator.user.*
+
+# Other IDE or editor files
+*.swp
+*.swo
+*~
+.idea/
+.vscode/
+
+# Generated moc files and other intermediate files (if placed in source tree)
+moc_*.cpp
+qrc_*.cpp
+ui_*.h
+
