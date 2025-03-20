@@ -12,7 +12,7 @@ WaveLogger::WaveLogger(QObject *parent)
     QString fileName;
     int counter = 1;
     do {
-        fileName = baseName + QString("-x%1.txt").arg(counter);
+        fileName = baseName + QString("-%1.txt").arg(counter);
         counter++;
     } while (QFile::exists(fileName));
 

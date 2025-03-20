@@ -137,7 +137,6 @@ QStringList WaveformTuner::targetDevices() const {
             // Look for a device name that clearly indicates "L1" (but not "L1L2" or "L2")
             for (const QString &dev : m_allAmpDevices) {
                 if (dev.contains("L1", Qt::CaseInsensitive) &&
-                    !dev.contains("L1L2", Qt::CaseInsensitive) &&
                     !dev.contains("L2", Qt::CaseInsensitive)) {
                     result << dev;
                     break;
@@ -150,7 +149,7 @@ QStringList WaveformTuner::targetDevices() const {
             // Look for a device name that clearly indicates "L2" (and not "L1L2")
             for (const QString &dev : m_allAmpDevices) {
                 if (dev.contains("L2", Qt::CaseInsensitive) &&
-                    !dev.contains("L1L2", Qt::CaseInsensitive)) {
+                    !dev.contains("L1", Qt::CaseInsensitive)) {
                     result << dev;
                     break;
                 }
@@ -543,13 +542,14 @@ void WaveformTuner::transitionToState(TuningState newState)
         QString fileName = fileInfo.fileName();
         QString channelString = (m_channel == 0 ? "L1" : "L2");
         qDebug() << "Waveform" << fileName << "for channel" << channelString
-                 << "is tuned to a minimum power of" << m_finalStableMin
-                 << "dBm and a maximum power of" << m_finalStableMax << "dBm";
-        QString logMsg = QString("Waveform %1 for channel %2 is tuned to a minimum power of %3 dBm and a maximum power of %4 dBm")
+                 << "is tuned to a min power of" << m_finalStableMin
+                 << "dBm and a max power of" << m_finalStableMax << "dBm";
+        QString logMsg = QString("%1 ch %2 is tuned to min power %3 dBm, max power %4 dBm, with SDR gain %5 dBm")
                              .arg(fileName)
                              .arg(channelString)
                              .arg(m_finalStableMin, 0, 'f', 1)
-                             .arg(m_finalStableMax, 0, 'f', 1);
+                             .arg(m_finalStableMax, 0, 'f', 1)
+                             .arg(m_currentGain);
         if (m_logger)
             m_logger->debugAndLog(logMsg);
         if (m_isL1L2 && m_channel == 0) {

@@ -4,6 +4,8 @@
 #include <QRegularExpression>
 #include <QDebug>
 #include <limits.h>
+#include <QCoreApplication>
+#include <QSettings>
 
 PythonEditor::PythonEditor(QObject *parent)
     : QObject(parent)
@@ -12,27 +14,36 @@ PythonEditor::PythonEditor(QObject *parent)
 
 bool PythonEditor::editGainValue(const QString &filePath, int newGain, int targetChannel)
 {
-    // Validate channel and gain range.
+    // Read the allowed gain range from waveTuneConfig.ini.
+    // The .ini file is assumed to be in the same directory as the application.
+    QString configFile = QCoreApplication::applicationDirPath() + "/waveTuneConfig.ini";
+    QSettings settings(configFile, QSettings::IniFormat);
+    int minGain = settings.value("Gain/Min", -10).toInt();
+    int maxGain = settings.value("Gain/Max", 60).toInt();
+
+    // Validate channel.
     if (targetChannel != 0 && targetChannel != 1) {
         qWarning() << "Invalid channel specified:" << targetChannel;
         return false;
     }
-    if ((newGain < -10) || (newGain > 60)) {
-        qWarning() << "Gain value out of allowed range:" << newGain;
+    // Validate gain using values from config file.
+    if ((newGain < minGain) || (newGain > maxGain)) {
+        qWarning() << "Gain value out of allowed range:" << newGain
+                   << "(Allowed range:" << minGain << "to" << maxGain << ")";
         return false;
     }
 
     // Read all lines from file.
-    QFile file(filePath);
-    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+    QFile fileObj(filePath);
+    if (!fileObj.open(QIODevice::ReadOnly | QIODevice::Text)) {
         qWarning() << "Cannot open file for reading:" << filePath;
         return false;
     }
     QStringList lines;
-    QTextStream in(&file);
+    QTextStream in(&fileObj);
     while (!in.atEnd())
         lines.append(in.readLine());
-    file.close();
+    fileObj.close();
 
     // Regular expression to capture:
     //   Group 1: SDR instance name (between "self." and ".set_gain")
@@ -157,14 +168,14 @@ bool PythonEditor::editGainValue(const QString &filePath, int newGain, int targe
     lines[lineToUpdate] = newLine;
 
     // Write the updated content back to the file.
-    if (!file.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate)) {
+    if (!fileObj.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate)) {
         qWarning() << "Cannot open file for writing:" << filePath;
         return false;
     }
-    QTextStream out(&file);
+    QTextStream out(&fileObj);
     for (const QString &line : lines)
         out << line << "\n";
-    file.close();
+    fileObj.close();
 
     return true;
 }

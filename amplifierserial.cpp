@@ -1,4 +1,6 @@
 #include "amplifierserial.h"
+#include <QCoreApplication>
+#include <QSettings>
 #include <QSerialPort>
 #include <QSerialPortInfo>
 #include <QRegularExpression>
@@ -162,27 +164,55 @@ void AmplifierSerial::handleReadyRead()
 
 QStringList AmplifierSerial::connectedDevices() const
 {
-    // Get the raw device list.
+    // Get the raw device list from discovered ports.
     QStringList devices = m_ports.keys();
 
-    // If exactly two devices are discovered, try to re-order them.
+    // Read amplifier names from waveTuneConfig.ini in the application directory.
+    QString configFile = QCoreApplication::applicationDirPath() + "/waveTuneConfig.ini";
+    QSettings settings(configFile, QSettings::IniFormat);
+
+    QString configAmpL1 = settings.value("Amplifiers/L1", "").toString();
+    QString configAmpL2 = settings.value("Amplifiers/L2", "").toString();
+
+    // If any amplifier is specified in the config, create a list of them.
+    QStringList configDevices;
+    if (!configAmpL1.trimmed().isEmpty())
+        configDevices << configAmpL1.trimmed();
+    if (!configAmpL2.trimmed().isEmpty())
+        configDevices << configAmpL2.trimmed();
+
+    // If the config specified one or more amplifiers,
+    // filter them to only include devices that are in our discovered list.
+    if (!configDevices.isEmpty()) {
+        QStringList result;
+        for (const QString &dev : configDevices) {
+            if (devices.contains(dev))
+                result << dev;
+        }
+        // If we found at least one device from config, use it.
+        if (!result.isEmpty())
+            return result;
+    }
+
+    // If no amplifiers were specified in the config (or none were found),
+    // use the normal discovery logic.
+
+    // If exactly two devices are discovered, try to re-order them based on naming heuristics.
     if (devices.size() == 2) {
         QString amp1, amp2;
         for (const QString &dev : devices) {
-            // If the device name contains "L1" but not "L2" (to avoid names like "L1L2")
-            // then consider it amplifier1.
+            // If the device name contains "L1" but not "L1L2" or "L2", mark it as L1.
             if (dev.contains("L1", Qt::CaseInsensitive) &&
                 !dev.contains("L1L2", Qt::CaseInsensitive) &&
                 !dev.contains("L2", Qt::CaseInsensitive)) {
                 amp1 = dev;
             }
-            // If it clearly indicates "L2" (and not "L1L2"), mark it as amp2.
+            // If the device name clearly indicates "L2" (and not "L1L2"), mark it as L2.
             else if (dev.contains("L2", Qt::CaseInsensitive) &&
                      !dev.contains("L1L2", Qt::CaseInsensitive)) {
                 amp2 = dev;
             }
         }
-        // If we found both amp1 and amp2, return them in that order.
         if (!amp1.isEmpty() && !amp2.isEmpty()) {
             return QStringList() << amp1 << amp2;
         }
