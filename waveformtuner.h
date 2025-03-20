@@ -33,11 +33,15 @@ private slots:
     void onAmpOutput(const QString &device, const QString &output);
     void onAmpFault(const QString &device, const QString &error);
     void onPythonOutput(const QString &output);
+    int extractChannelFromFile(const QString &filePath);
 
 private:
     // Final measured values for logging.
     double m_finalStableMin;
     double m_finalStableMax;
+
+    int m_adjustDownCount = 0;
+    double m_lastAvg = 0.0;
 
     int m_alcRangeCount = 0;
     double m_measuredMin;
@@ -45,6 +49,7 @@ private:
     WaveLogger *m_logger = nullptr;
     int m_gainSwapCount = 0;
     int m_lastGainAdjustment = 0;
+    int m_initialGain;
 
     enum TuningState {
         Idle,
@@ -73,29 +78,31 @@ private:
         QueryFwdPwrALC,
         WaitForAlcStable,
         FinalizeTuning,
-        RecheckMax,     // New state for final maximum recheck
-        WaitForMaxStable, // New state to wait for stable VVA readings
+        RecheckMax,
+        WaitForMaxStable,
         LogResults,
         RetryAfterFault
     };
 
     void transitionToState(TuningState newState);
     void resetRollingAverages();
+    QStringList targetDevices() const; // Returns the amp devices for the current channel
 
     // User parameters.
     QString m_waveformFile;
     QString m_ampModel;      // "x300" or "N321"
-    double m_minPower;       // Target minimum power provided by the user (used for comparisons)
-    double m_maxPower;       // Target maximum power provided by the user (used for comparisons)
+    double m_minPower;       // Target minimum power (user provided)
+    double m_maxPower;       // Target maximum power (user provided)
     QString m_critical;      // "HIGH" or "LOW"
 
-    int m_currentGain;       // Current gain (stored in python file)
-    int m_channel;           // (Assumed 0 for now.)
+    int m_currentGain;       // Current gain value (set in the python file)
+    int m_channel;           // 0 or 1 (0 for L1, 1 for L2)
+    bool m_isL1L2;         // True if tuning an L1_L2 file
 
     AmplifierSerial *m_ampSerial;
     PythonEditor   *m_pythonEditor;
     PythonRunner   *m_pythonRunner;
-    QStringList m_allAmpDevices;    // Discovered amplifier devices
+    QStringList m_allAmpDevices;    // All discovered amplifier devices
     QStringList m_testingAmpDevices; // Devices that responded stably
 
     QTimer *m_delayTimer;

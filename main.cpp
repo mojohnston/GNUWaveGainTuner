@@ -3,9 +3,29 @@
 #include <QDir>
 #include <QStringList>
 #include <QTimer>
+#include <QSettings>
 #include <functional>
 #include "waveformtuner.h"
 #include "wavelogger.h"
+
+// Helper: Check if the filename should be excluded.
+bool isFileExcluded(const QString &fileName)
+{
+    // Build the path to waveTuneConfig.ini in the application's directory.
+    QString configFile = QCoreApplication::applicationDirPath() + "/waveTuneConfig.ini";
+    QSettings settings(configFile, QSettings::IniFormat);
+    settings.beginGroup("Exclusions");
+    // childKeys() returns the list of keys in the group.
+    QStringList exclusions = settings.childKeys();
+    settings.endGroup();
+
+    // Check each exclusion keyword (non-case sensitive).
+    for (const QString &exclusion : exclusions) {
+        if (fileName.contains(exclusion, Qt::CaseInsensitive))
+            return true;
+    }
+    return false;
+}
 
 // Helper function now accepts a WaveLogger* parameter.
 void processNextFile(const QStringList &selectedFiles,
@@ -25,6 +45,22 @@ void processNextFile(const QStringList &selectedFiles,
     }
 
     QString file = selectedFiles.at(index);
+    QFileInfo fi(file);
+    QString baseName = fi.fileName();
+
+    // Check if the file should be skipped (based on the Exclusions list).
+    if (isFileExcluded(baseName)) {
+        // Log the exclusion and immediately process the next file.
+        QString logMsg = QString("Waveform %1 cannot be tuned.").arg(baseName);
+        if (sharedLogger)
+            sharedLogger->debugAndLog(logMsg);
+        *out << logMsg << "\n";
+        QTimer::singleShot(3000, app, [=]() {
+            processNextFile(selectedFiles, index + 1, app, out, ampModel, minPower, maxPower, critical, sharedLogger);
+        });
+        return;
+    }
+
     *out << "Processing file (" << (index + 1) << "/" << selectedFiles.size() << "): " << file << "\n";
 
     // Pass the shared logger to the WaveformTuner.
@@ -94,7 +130,7 @@ int main(int argc, char *argv[])
     cout << "L1: " << l1Files.size() << " files\n";
     cout << "L2: " << l2Files.size() << " files\n";
     cout << "L1_L2: " << l1l2Files.size() << " files\n";
-    cout << "Enter 1 to tune L1, 2 to tune L2, or 3 to tune L1_L2: " << Qt::flush;
+    cout << "Enter 1 to tune L1, 2 to tune L2, 3 to tune L1_L2, or 4 to tune All: " << Qt::flush;
     QString categoryChoice = cin.readLine().trimmed();
 
     QStringList selectedFiles;
@@ -104,6 +140,8 @@ int main(int argc, char *argv[])
         selectedFiles = l2Files;
     else if (categoryChoice == "3")
         selectedFiles = l1l2Files;
+    else if (categoryChoice == "4")
+        selectedFiles = l1Files + l2Files + l1l2Files;
     else {
         cout << "Invalid selection. Exiting.\n";
         return -1;
